@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --gold-primary: #D4AF37;
+    --gold-secondary: #FFD700;
+    --gold-gradient: linear-gradient(135deg, #BF953F, #FCF6BA, #B38728, #FBF5B7, #AA771C);
+    --dark-bg: #0A0A0A;
+    --dark-surface: #1A1A1A;
+    --text-primary: #FFFFFF;
+    --text-muted: #A0A0A0;
+  }
+
+  body {
+    @apply bg-[#0A0A0A] text-white antialiased;
+    font-family: 'Inter', sans-serif;
+  }
+}
+
+@layer components {
+  .btn-gold {
+    @apply px-6 py-3 rounded-xl font-bold transition-all duration-300 active:scale-95;
+    background: var(--gold-gradient);
+    color: #000;
+  }
+
+  .btn-gold:hover {
+    @apply shadow-[0_0_20px_rgba(212,175,55,0.4)];
+    filter: brightness(1.1);
+  }
+
+  .card-premium {
+    @apply bg-[#1A1A1A] border border-white/10 rounded-2xl p-6 backdrop-blur-md;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+  }
+
+  .gold-text {
+    background: var(--gold-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .input-premium {
+    @apply w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-[#D4AF37] transition-colors text-white;
+  }
+
+  .glass {
+    @apply bg-white/[0.03] backdrop-blur-xl border border-white/10;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-black;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-[#D4AF37]/30 rounded-full;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-[#D4AF37]/50;
+}

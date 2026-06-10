@@ -10,10 +10,12 @@ export default function LockInPage() {
   const [amountToLock, setAmountToLock] = useState('');
   const [loading, setLoading] = useState(false);
   const [plans, setPlans] = useState([]);
+  const [history, setHistory] = useState([]);
 
   useEffect(() => {
     fetchDashboard();
     fetchPlans();
+    fetchHistory();
   }, []);
 
   const fetchDashboard = () => {
@@ -26,6 +28,15 @@ export default function LockInPage() {
       const res = await api.get('/lockin/plans.php');
       if (res.data.success) {
         setPlans(res.data.data);
+      }
+    } catch (err) {}
+  };
+
+  const fetchHistory = async () => {
+    try {
+      const res = await api.get('/lockin/history.php');
+      if (res.data.success) {
+        setHistory(res.data.data);
       }
     } catch (err) {}
   };
@@ -45,12 +56,13 @@ export default function LockInPage() {
     setLoading(true);
     try {
       const res = await api.post('/lockin/create.php', {
-        plan_id: selectedPlan.id,
+        months: selectedPlan.months,
         gold_grams: parseFloat(amountToLock)
       });
       if (res.data.success) {
         toast.success('Gold Locked Successfully!');
         fetchDashboard();
+        fetchHistory();
         setAmountToLock('');
         setSelectedPlan(null);
       } else {
@@ -186,6 +198,77 @@ export default function LockInPage() {
           </button>
         </div>
       </div>
+
+      {/* Lock-In History Section */}
+      {history.length > 0 && (
+        <div className="mt-12 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-white">Your Lock-In Portfolio</h2>
+            <div className="px-3 py-1 bg-[#D4AF37]/10 text-[#D4AF37] text-xs font-bold rounded-full border border-[#D4AF37]/20 uppercase tracking-widest">
+              {history.length} Active Plans
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {history.map((h, i) => (
+              <div key={i} className="card-premium border-white/5 p-6 relative overflow-hidden group">
+                {/* Background glow based on progress */}
+                <div 
+                  className="absolute inset-0 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity"
+                  style={{ background: `linear-gradient(90deg, #D4AF37 ${h.progress_percentage}%, transparent ${h.progress_percentage}%)` }}
+                ></div>
+                
+                <div className="relative z-10">
+                  <div className="flex justify-between items-start mb-6">
+                    <div>
+                      <p className="text-[#D4AF37] font-black text-xl">{formatGrams(h.gold_grams)}</p>
+                      <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mt-1">Locked Amount</p>
+                    </div>
+                    <div className="text-right">
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-bold">
+                        <TrendingUp size={12} />
+                        +{h.return_percentage}%
+                      </div>
+                      <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mt-1">{h.plan_name}</p>
+                    </div>
+                  </div>
+
+                  {/* Progress Bar UI */}
+                  <div className="space-y-2 mb-6">
+                    <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest">
+                      <span className="text-white/40">Maturity Progress</span>
+                      <span className="text-[#D4AF37]">{Math.floor(h.progress_percentage)}%</span>
+                    </div>
+                    <div className="h-2 w-full bg-[#111] rounded-full overflow-hidden border border-white/5">
+                      <div 
+                        className="h-full bg-gradient-to-r from-[#BF953F] to-[#AA771C] rounded-full shadow-[0_0_10px_rgba(212,175,55,0.5)] transition-all duration-1000 relative"
+                        style={{ width: `${h.progress_percentage}%` }}
+                      >
+                        <div className="absolute top-0 right-0 bottom-0 w-4 bg-white/20 blur-[2px] animate-pulse"></div>
+                      </div>
+                    </div>
+                    <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-white/30">
+                      <span>{new Date(h.start_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit'})}</span>
+                      <span>{h.days_remaining} Days Left</span>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center p-3 rounded-xl bg-white/5 border border-white/5">
+                    <div>
+                      <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest">Est. Extra Gold</p>
+                      <p className="text-white font-bold text-sm">+{formatGrams(h.estimated_extra_gold)}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest">Maturity Date</p>
+                      <p className="text-[#D4AF37] font-bold text-sm">{new Date(h.end_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric'})}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

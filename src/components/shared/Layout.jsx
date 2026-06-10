@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { NavLink, useNavigate, useLocation, useOutlet } from 'react-router-dom';
+import { NavLink, Link, useNavigate, useLocation, useOutlet } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { LayoutDashboard, ShoppingCart, TrendingDown, TrendingUp, History, Truck, User, Settings, LogOut, Menu, X, Bell, Shield, ChevronRight, Wallet, Ticket, Star, FileText, Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -11,6 +11,7 @@ const userNav = [
   { isAction: true, action: 'buy', icon: ShoppingCart, label: 'Buy' },
   { isAction: true, action: 'sell', icon: TrendingDown, label: 'Sell' },
   { to: '/transactions', icon: History, label: 'Transactions' },
+  { to: '/lock-in', icon: Lock, label: 'Lock & Earn' },
   { to: '/delivery', icon: Truck, label: 'Delivery' },
   { to: '/profile', icon: User, label: 'Profile' },
   { to: '/support', icon: Ticket, label: 'Support' },
@@ -36,6 +37,7 @@ export default function Layout({ isAdmin }) {
   const outlet = useOutlet();
   const [showBuyModal, setShowBuyModal] = useState(false);
   const [showSellModal, setShowSellModal] = useState(false);
+  const [open, setOpen] = useState(false);
   const nav = isAdmin ? adminNav : userNav;
 
   const handleLogout = () => {

@@ -93,7 +93,10 @@ export default function AdminDeliveries() {
                     <p className="max-w-[200px] truncate" title={d.delivery_address}>{d.delivery_address}</p>
                     <p className="text-xs">{d.delivery_city}, {d.delivery_state} - {d.delivery_pincode}</p>
                   </td>
-                  <td className="px-6 py-4 text-amber-500 font-bold">{parseFloat(d.gold_grams).toFixed(4)}g</td>
+                  <td className="px-6 py-4">
+                    <span className="text-amber-500 font-bold">{parseFloat(d.gold_grams).toFixed(4)}g</span>
+                    <p className="text-xs text-white/50 capitalize">{d.metal_type || 'gold'}</p>
+                  </td>
                   <td className="px-6 py-4">
                     <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${
                       d.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500' :

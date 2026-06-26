@@ -7,7 +7,7 @@ export default function AdminLockIn() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
-  const [newPlan, setNewPlan] = useState({ plan_name: '', months: '', return_percentage: '', min_investment: '', max_investment: '', penalty_percentage: '' });
+  const [newPlan, setNewPlan] = useState({ plan_name: '', months: '', return_percentage: '', min_investment: '', max_investment: '', penalty_percentage: '', metal_type: 'gold' });
 
   const fetchStats = () => {
     api.get('/admin/lockin_stats.php').then(r => {
@@ -26,7 +26,7 @@ export default function AdminLockIn() {
       const res = await api.post('/admin/lockin_plans.php', newPlan);
       if (res.data.success) {
         setIsCreating(false);
-        setNewPlan({ plan_name: '', months: '', return_percentage: '', min_investment: '', max_investment: '', penalty_percentage: '' });
+        setNewPlan({ plan_name: '', months: '', return_percentage: '', min_investment: '', max_investment: '', penalty_percentage: '', metal_type: 'gold' });
         fetchStats();
       } else {
         alert(res.data.message);
@@ -44,10 +44,14 @@ export default function AdminLockIn() {
         <p className="text-white/40 text-sm font-medium mt-1">Manage gold lock-in plans and monitor locked assets</p>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
         <div className="p-6 rounded-3xl bg-[#D4AF37]/10 border border-[#D4AF37]/20">
           <p className="text-[#D4AF37]/60 text-[10px] font-bold uppercase tracking-widest mb-2">Total Locked Gold</p>
           <p className="text-3xl font-black text-[#D4AF37]">{data?.total_locked_gold || 0}g</p>
+        </div>
+        <div className="p-6 rounded-3xl bg-gray-500/10 border border-gray-500/20">
+          <p className="text-gray-400/60 text-[10px] font-bold uppercase tracking-widest mb-2">Total Locked Silver</p>
+          <p className="text-3xl font-black text-gray-400">{data?.total_locked_silver || 0}g</p>
         </div>
         <div className="p-6 rounded-3xl bg-blue-500/10 border border-blue-500/20">
           <p className="text-blue-400/60 text-[10px] font-bold uppercase tracking-widest mb-2">Active Plans</p>
@@ -82,7 +86,7 @@ export default function AdminLockIn() {
                     <p className="text-white/40 text-[10px]">{lock.mobile}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-[#D4AF37] font-bold">{lock.gold_grams}g</p>
+                    <p className={`font-bold ${lock.metal_type === 'silver' ? 'text-gray-300' : 'text-[#D4AF37]'}`}>{lock.metal_type === 'silver' ? lock.silver_grams : lock.gold_grams}g <span className="text-[10px] uppercase">{lock.metal_type}</span></p>
                     <p className="text-white/40 text-[10px]">Locked till {format(new Date(lock.end_date), 'dd MMM yyyy')}</p>
                   </div>
                 </div>
@@ -102,7 +106,7 @@ export default function AdminLockIn() {
               {data?.plans?.map((p, i) => (
                 <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10">
                   <div>
-                    <p className="text-white font-bold text-sm">{p.months} Months ({p.plan_name || 'Basic'})</p>
+                    <p className="text-white font-bold text-sm">{p.months} Months ({p.plan_name || 'Basic'}) <span className={`text-[10px] px-2 py-0.5 rounded ml-2 uppercase ${p.metal_type === 'silver' ? 'bg-gray-500/20 text-gray-300' : 'bg-[#D4AF37]/20 text-[#D4AF37]'}`}>{p.metal_type || 'gold'}</span></p>
                     <p className="text-white/40 text-[10px] uppercase tracking-widest mt-1">Min: ₹{p.min_investment} - Penalty: {p.penalty_percentage}%</p>
                   </div>
                   <div className="text-right">
@@ -114,13 +118,23 @@ export default function AdminLockIn() {
               
               {isCreating ? (
                 <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3 mt-4">
-                  <input
-                    type="text"
-                    placeholder="Plan Name (e.g. Silver Lock)"
-                    value={newPlan.plan_name}
-                    onChange={e => setNewPlan({...newPlan, plan_name: e.target.value})}
-                    className="w-full bg-[#111] border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#D4AF37]"
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Plan Name (e.g. Silver Lock)"
+                      value={newPlan.plan_name}
+                      onChange={e => setNewPlan({...newPlan, plan_name: e.target.value})}
+                      className="w-full bg-[#111] border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#D4AF37]"
+                    />
+                    <select
+                      value={newPlan.metal_type}
+                      onChange={e => setNewPlan({...newPlan, metal_type: e.target.value})}
+                      className="bg-[#111] border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#D4AF37]"
+                    >
+                      <option value="gold">Gold</option>
+                      <option value="silver">Silver</option>
+                    </select>
+                  </div>
                   <div className="grid grid-cols-2 gap-2">
                     <input
                       type="number"

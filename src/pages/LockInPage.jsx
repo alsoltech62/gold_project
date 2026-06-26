@@ -1,31 +1,52 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Lock, Shield, TrendingUp, Info, ArrowRight, CheckCircle2 } from 'lucide-react';
 import api, { formatGrams, formatINR } from '../utils/api';
 import toast from 'react-hot-toast';
 
 export default function LockInPage() {
+  const location = useLocation();
   const [data, setData] = useState(null);
-  const [rate, setRate] = useState(null);
+  const [goldRate, setGoldRate] = useState(null);
+  const [silverRate, setSilverRate] = useState(null);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [amountToLock, setAmountToLock] = useState('');
   const [loading, setLoading] = useState(false);
   const [plans, setPlans] = useState([]);
   const [history, setHistory] = useState([]);
+  const [metalType, setMetalType] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('metal') === 'silver' ? 'silver' : 'gold';
+  });
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const metal = params.get('metal');
+    if (metal === 'silver' || metal === 'gold') {
+      setMetalType(metal);
+    }
+  }, [location.search]);
 
   useEffect(() => {
     fetchDashboard();
-    fetchPlans();
     fetchHistory();
   }, []);
 
+  useEffect(() => {
+    fetchPlans();
+    setAmountToLock('');
+    setSelectedPlan(null);
+  }, [metalType]);
+
   const fetchDashboard = () => {
     api.get('/user/dashboard.php').then(r => setData(r.data.data)).catch(() => {});
-    api.get('/gold/rate.php').then(r => setRate(r.data.data)).catch(() => {});
+    api.get('/gold/rate.php').then(r => setGoldRate(r.data.data)).catch(() => {});
+    api.get('/silver/rate.php').then(r => setSilverRate(r.data.data.current_rate)).catch(() => {});
   };
 
   const fetchPlans = async () => {
     try {
-      const res = await api.get('/lockin/plans.php');
+      const res = await api.get('/lockin/plans.php?metal_type=' + metalType);
       if (res.data.success) {
         setPlans(res.data.data);
       }
@@ -41,7 +62,15 @@ export default function LockInPage() {
     } catch (err) {}
   };
 
-  const totalGrams = data?.total_gold_grams || 0;
+  const filteredHistory = history.filter(h => h.metal_type === metalType);
+
+  const totalGrams = metalType === 'gold' ? (data?.total_gold_grams || 0) : (data?.total_silver_grams || 0);
+  const rate = metalType === 'gold' ? goldRate : silverRate;
+  const themeColor = metalType === 'gold' ? '#D4AF37' : '#9CA3AF';
+  const themeColorVar = metalType === 'gold' ? 'text-[#D4AF37]' : 'text-gray-400';
+  const themeBorderVar = metalType === 'gold' ? 'border-[#D4AF37]/20' : 'border-gray-400/20';
+  const themeBgVar = metalType === 'gold' ? 'bg-[#D4AF37]/20' : 'bg-gray-400/20';
+  const themeGradVar = metalType === 'gold' ? 'from-[#D4AF37]/10' : 'from-gray-400/10';
   
   const handleLock = async () => {
     if (!amountToLock || parseFloat(amountToLock) <= 0 || parseFloat(amountToLock) > totalGrams) {
@@ -57,10 +86,11 @@ export default function LockInPage() {
     try {
       const res = await api.post('/lockin/create.php', {
         months: selectedPlan.months,
-        gold_grams: parseFloat(amountToLock)
+        grams: parseFloat(amountToLock),
+        metal_type: metalType
       });
       if (res.data.success) {
-        toast.success('Gold Locked Successfully!');
+        toast.success(`${metalType === 'gold' ? 'Gold' : 'Silver'} Locked Successfully!`);
         fetchDashboard();
         fetchHistory();
         setAmountToLock('');
@@ -78,16 +108,31 @@ export default function LockInPage() {
     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <header>
         <h1 className="text-3xl font-black text-white tracking-tight">Lock & Earn</h1>
-        <p className="text-white/40 text-sm font-medium mt-1">Get up to 12% extra returns by locking your gold</p>
+        <p className="text-white/40 text-sm font-medium mt-1">Get up to 12% extra returns by locking your assets</p>
       </header>
 
-      <div className="card-premium border-[#D4AF37]/20 bg-gradient-to-r from-[#D4AF37]/10 to-transparent p-6 flex flex-col md:flex-row items-center justify-between gap-6">
+      <div className="flex gap-4 p-1 bg-white/5 rounded-xl border border-white/5 w-fit">
+        <button 
+          onClick={() => setMetalType('gold')}
+          className={`px-6 py-2 rounded-lg font-bold text-sm transition-all ${metalType === 'gold' ? 'bg-[#D4AF37] text-black shadow-[0_0_15px_rgba(212,175,55,0.4)]' : 'text-white/40 hover:text-white'}`}
+        >
+          Lock Gold
+        </button>
+        <button 
+          onClick={() => setMetalType('silver')}
+          className={`px-6 py-2 rounded-lg font-bold text-sm transition-all ${metalType === 'silver' ? 'bg-gray-300 text-black shadow-lg' : 'text-white/40 hover:text-white'}`}
+        >
+          Lock Silver
+        </button>
+      </div>
+
+      <div className={`card-premium ${themeBorderVar} bg-gradient-to-r ${themeGradVar} to-transparent p-6 flex flex-col md:flex-row items-center justify-between gap-6`}>
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 bg-[#D4AF37]/20 rounded-2xl flex items-center justify-center text-[#D4AF37]">
+          <div className={`w-14 h-14 ${themeBgVar} rounded-2xl flex items-center justify-center ${themeColorVar}`}>
             <TrendingUp size={28} />
           </div>
           <div>
-            <p className="text-[10px] font-bold text-[#D4AF37] uppercase tracking-widest">Available Gold Balance</p>
+            <p className={`text-[10px] font-bold ${themeColorVar} uppercase tracking-widest`}>Available {metalType === 'gold' ? 'Gold' : 'Silver'} Balance</p>
             <p className="text-2xl font-black text-white">{formatGrams(totalGrams)}</p>
             {rate && <p className="text-white/40 text-xs">≈ {formatINR(totalGrams * rate.rate_per_gram)}</p>}
           </div>
@@ -129,11 +174,11 @@ export default function LockInPage() {
 
           <div className="card-premium border-white/5 p-6 space-y-4 bg-[#0F0F0F]">
             <div className="flex items-start gap-3">
-              <Shield className="text-[#D4AF37] shrink-0 mt-0.5" size={16} />
-              <p className="text-white/60 text-xs leading-relaxed">Your gold remains completely safe in our insured vaults during the lock-in period.</p>
+              <Shield className={`${themeColorVar} shrink-0 mt-0.5`} size={16} />
+              <p className="text-white/60 text-xs leading-relaxed">Your {metalType === 'gold' ? 'gold' : 'silver'} remains completely safe in our insured vaults during the lock-in period.</p>
             </div>
             <div className="flex items-start gap-3">
-              <Info className="text-[#D4AF37] shrink-0 mt-0.5" size={16} />
+              <Info className={`${themeColorVar} shrink-0 mt-0.5`} size={16} />
               <p className="text-white/60 text-xs leading-relaxed">Early withdrawal is possible but subject to penalty charges depending on the duration served.</p>
             </div>
           </div>
@@ -144,17 +189,17 @@ export default function LockInPage() {
           
           <div className="space-y-6 flex-1">
             <div>
-              <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] mb-2 block">Gold to Lock (Grams)</label>
+              <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] mb-2 block">{metalType === 'gold' ? 'Gold' : 'Silver'} to Lock (Grams)</label>
               <input
                 type="number"
                 value={amountToLock}
                 onChange={e => setAmountToLock(e.target.value)}
                 placeholder="0.0000"
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-xl font-black text-white focus:outline-none focus:border-[#D4AF37]"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-xl font-black text-white focus:outline-none focus:border-white/30"
               />
               <button 
                 onClick={() => setAmountToLock(totalGrams.toString())}
-                className="text-[#D4AF37] text-[10px] font-bold uppercase tracking-widest mt-2 hover:underline"
+                className={`${themeColorVar} text-[10px] font-bold uppercase tracking-widest mt-2 hover:underline`}
               >
                 Max: {formatGrams(totalGrams)}
               </button>
@@ -173,7 +218,7 @@ export default function LockInPage() {
                 <div className="h-px w-full bg-white/10 my-2"></div>
                 <div className="flex justify-between items-center">
                   <span className="text-white/60 font-bold">Estimated Extra Profit:</span>
-                  <span className="text-[#D4AF37] font-black text-lg">
+                  <span className={`${themeColorVar} font-black text-lg`}>
                     {formatINR((parseFloat(amountToLock) * rate.rate_per_gram) * (selectedPlan.returnRate / 100))}
                   </span>
                 </div>
@@ -184,7 +229,7 @@ export default function LockInPage() {
           <button
             onClick={handleLock}
             disabled={!selectedPlan || !amountToLock || loading}
-            className="w-full btn-gold py-4 text-lg mt-6 flex items-center justify-center gap-2 disabled:opacity-50"
+            className={`w-full ${metalType === 'gold' ? 'btn-gold' : 'bg-gray-300 text-black hover:bg-white'} font-bold rounded-xl py-4 text-lg mt-6 flex items-center justify-center gap-2 disabled:opacity-50 transition-all`}
           >
             {loading ? (
               <div className="w-6 h-6 border-3 border-black/30 border-t-black rounded-full animate-spin"></div>
@@ -200,29 +245,29 @@ export default function LockInPage() {
       </div>
 
       {/* Lock-In History Section */}
-      {history.length > 0 && (
+      {filteredHistory.length > 0 && (
         <div className="mt-12 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-white">Your Lock-In Portfolio</h2>
-            <div className="px-3 py-1 bg-[#D4AF37]/10 text-[#D4AF37] text-xs font-bold rounded-full border border-[#D4AF37]/20 uppercase tracking-widest">
-              {history.length} Active Plans
+            <div className={`px-3 py-1 ${themeBgVar} ${themeColorVar} text-xs font-bold rounded-full border ${themeBorderVar} uppercase tracking-widest`}>
+              {filteredHistory.length} Active Plans
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {history.map((h, i) => (
+            {filteredHistory.map((h, i) => (
               <div key={i} className="card-premium border-white/5 p-6 relative overflow-hidden group">
                 {/* Background glow based on progress */}
                 <div 
                   className="absolute inset-0 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity"
-                  style={{ background: `linear-gradient(90deg, #D4AF37 ${h.progress_percentage}%, transparent ${h.progress_percentage}%)` }}
+                  style={{ background: `linear-gradient(90deg, ${h.metal_type === 'gold' ? '#D4AF37' : '#9CA3AF'} ${h.progress_percentage}%, transparent ${h.progress_percentage}%)` }}
                 ></div>
                 
                 <div className="relative z-10">
                   <div className="flex justify-between items-start mb-6">
                     <div>
-                      <p className="text-[#D4AF37] font-black text-xl">{formatGrams(h.gold_grams)}</p>
-                      <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mt-1">Locked Amount</p>
+                      <p className={`${h.metal_type === 'gold' ? 'text-[#D4AF37]' : 'text-gray-300'} font-black text-xl`}>{formatGrams(h.grams)}</p>
+                      <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mt-1">{h.metal_type} Locked</p>
                     </div>
                     <div className="text-right">
                       <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-bold">
@@ -237,11 +282,11 @@ export default function LockInPage() {
                   <div className="space-y-2 mb-6">
                     <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest">
                       <span className="text-white/40">Maturity Progress</span>
-                      <span className="text-[#D4AF37]">{Math.floor(h.progress_percentage)}%</span>
+                      <span className={h.metal_type === 'gold' ? 'text-[#D4AF37]' : 'text-gray-300'}>{Math.floor(h.progress_percentage)}%</span>
                     </div>
                     <div className="h-2 w-full bg-[#111] rounded-full overflow-hidden border border-white/5">
                       <div 
-                        className="h-full bg-gradient-to-r from-[#BF953F] to-[#AA771C] rounded-full shadow-[0_0_10px_rgba(212,175,55,0.5)] transition-all duration-1000 relative"
+                        className={`h-full rounded-full transition-all duration-1000 relative ${h.metal_type === 'gold' ? 'bg-gradient-to-r from-[#BF953F] to-[#AA771C] shadow-[0_0_10px_rgba(212,175,55,0.5)]' : 'bg-gradient-to-r from-gray-500 to-gray-300 shadow-[0_0_10px_rgba(156,163,175,0.5)]'}`}
                         style={{ width: `${h.progress_percentage}%` }}
                       >
                         <div className="absolute top-0 right-0 bottom-0 w-4 bg-white/20 blur-[2px] animate-pulse"></div>
@@ -255,12 +300,12 @@ export default function LockInPage() {
 
                   <div className="flex justify-between items-center p-3 rounded-xl bg-white/5 border border-white/5">
                     <div>
-                      <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest">Est. Extra Gold</p>
-                      <p className="text-white font-bold text-sm">+{formatGrams(h.estimated_extra_gold)}</p>
+                      <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest">Est. Extra {h.metal_type}</p>
+                      <p className="text-white font-bold text-sm">+{formatGrams(h.estimated_extra)}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest">Maturity Date</p>
-                      <p className="text-[#D4AF37] font-bold text-sm">{new Date(h.end_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric'})}</p>
+                      <p className={`${h.metal_type === 'gold' ? 'text-[#D4AF37]' : 'text-gray-300'} font-bold text-sm`}>{new Date(h.end_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric'})}</p>
                     </div>
                   </div>
                 </div>

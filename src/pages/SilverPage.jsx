@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { Info, ShieldCheck, Zap, ArrowRight, Wallet, RefreshCcw } from 'lucide-react';
+import { Info, ShieldCheck, Zap, ArrowRight, Wallet, RefreshCcw, Lock } from 'lucide-react';
 import api, { formatINR, formatGrams } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
+import { Link } from 'react-router-dom';
 
 export default function SilverPage() {
-  const [tab, setTab] = useState('buy');
+  const [tab, setTab] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('tab') === 'sell' ? 'sell' : 'buy';
+  });
+  const [showSellUpsell, setShowSellUpsell] = useState(true);
   const [amount, setAmount] = useState('');
   const [gramsToSell, setGramsToSell] = useState('');
   const [rate, setRate] = useState(null);
@@ -174,6 +179,39 @@ export default function SilverPage() {
                   {loading ? <div className="w-6 h-6 border-3 border-black/30 border-t-black rounded-full animate-spin"></div> : <><Wallet size={20} /> Purchase Silver <ArrowRight size={20} /></>}
                 </button>
               </form>
+            ) : tab === 'sell' && showSellUpsell ? (
+              <div className="relative z-10 space-y-6">
+                <div className="text-center mb-8">
+                  <h2 className="text-2xl font-black text-white">Wait! Don't sell just yet.</h2>
+                  <p className="text-white/40 text-sm mt-2">Get more value from your silver by locking it in our vault.</p>
+                </div>
+                
+                <Link to="/lock-in?metal=silver" className="card-premium group hover:border-gray-300/50 transition-all p-6 flex flex-col sm:flex-row items-center gap-6 text-left relative overflow-hidden bg-gray-400/5 border-gray-400/20 block">
+                  <div className="w-16 h-16 shrink-0 rounded-2xl bg-gradient-to-br from-gray-400/20 to-transparent flex items-center justify-center text-gray-300 group-hover:scale-110 transition-all duration-500">
+                    <Lock size={28} />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-xl font-black text-white mb-1">Get up to 12% Extra</h3>
+                    <p className="text-gray-300 font-bold text-sm mb-2">Lock your silver for a period</p>
+                    <p className="text-white/40 text-xs leading-relaxed">Earn up to 12% guaranteed extra returns instead of selling now.</p>
+                  </div>
+                  <div className="shrink-0 flex items-center gap-2 text-gray-300 font-bold text-xs uppercase tracking-widest group-hover:gap-3 transition-all bg-white/5 px-4 py-2 rounded-lg">
+                    Explore Plans <ArrowRight size={14} />
+                  </div>
+                </Link>
+
+                <div className="relative flex justify-center mt-6">
+                  <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/10"></div></div>
+                  <span className="bg-[#1a1a1a] px-4 text-white/30 text-[10px] font-bold uppercase tracking-widest relative">Or</span>
+                </div>
+
+                <button 
+                  onClick={() => setShowSellUpsell(false)} 
+                  className="w-full mt-6 card-premium border-red-500/20 bg-red-500/5 hover:bg-red-500/10 text-red-400 font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all"
+                >
+                  <Wallet size={18} /> Continue to Sell Silver
+                </button>
+              </div>
             ) : (
               <form onSubmit={e => { e.preventDefault(); handleSell(); }} className="relative z-10 space-y-8">
                 <div className="space-y-4">

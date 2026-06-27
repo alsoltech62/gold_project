@@ -50,36 +50,48 @@ export default function BuyGoldPage() {
       return;
     }
 
-    const options = {
-      key: 'rzp_test_YOUR_KEY_HERE',
-      amount: parseFloat(amount) * 100,
-      currency: 'INR',
-      name: 'GoldVault',
-      description: `Purchase of ${grams.toFixed(4)}g 24K Gold`,
-      image: 'https://cdn-icons-png.flaticon.com/512/2489/2489753.png',
-      handler: async function (response) {
-        setLoading(true);
-        try {
-          const res = await api.post('/gold/buy.php', {
-            amount_inr: parseFloat(amount),
-            payment_method: 'UPI',
-            payment_id: response.razorpay_payment_id
-          });
-          if (res.data.success) {
-            toast.success(`Successfully acquired ${formatGrams(res.data.data.gold_grams)}!`, { icon: '✨' });
-            setAmount('');
-            setShowLockIn(true);
-          } else {
-            toast.error(res.data.message);
-          }
-        } catch (err) {
-          toast.error('Transaction failed.');
-        }
+      const orderRes = await api.post('/payment/create_order.php', { amount_inr: parseFloat(amount) });
+      if (!orderRes.data.success) {
+        toast.error('Failed to initiate payment');
         setLoading(false);
-      },
-      prefill: { name: user?.name, contact: user?.mobile },
-      theme: { color: '#D4AF37' }
-    };
+        return;
+      }
+
+      const { order_id, key } = orderRes.data.data;
+
+      const options = {
+        key: key,
+        amount: parseFloat(amount) * 100,
+        currency: 'INR',
+        name: 'GoldVault',
+        description: `Purchase of ${grams.toFixed(4)}g 24K Gold`,
+        image: 'https://cdn-icons-png.flaticon.com/512/2489/2489753.png',
+        order_id: order_id,
+        handler: async function (response) {
+          setLoading(true);
+          try {
+            const res = await api.post('/gold/buy.php', {
+              amount_inr: parseFloat(amount),
+              payment_method: 'UPI',
+              payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature
+            });
+            if (res.data.success) {
+              toast.success(`Successfully acquired ${formatGrams(res.data.data.gold_grams)}!`, { icon: '✨' });
+              setAmount('');
+              setShowLockIn(true);
+            } else {
+              toast.error(res.data.message);
+            }
+          } catch (err) {
+            toast.error('Transaction failed.');
+          }
+          setLoading(false);
+        },
+        prefill: { name: user?.name, contact: user?.mobile },
+        theme: { color: '#D4AF37' }
+      };
 
     const rzp = new window.Razorpay(options);
     rzp.open();

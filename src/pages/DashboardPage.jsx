@@ -200,11 +200,11 @@ export default function DashboardPage() {
           <div className="bg-[#111] border border-white/10 rounded-3xl p-6 w-full max-w-sm space-y-6 animate-in zoom-in-95 duration-200">
             <h3 className="text-xl font-bold text-white text-center">Select Metal to Sell</h3>
             <div className="grid grid-cols-2 gap-4">
-              <Link to="/sell" className="p-4 rounded-xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 text-center hover:bg-[#D4AF37]/20 transition-all">
+              <Link to="/sell?metal=gold" className="p-4 rounded-xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 text-center hover:bg-[#D4AF37]/20 transition-all">
                 <p className="text-2xl mb-2">🥇</p>
                 <p className="text-white font-bold">Gold</p>
               </Link>
-              <Link to="/silver" className="p-4 rounded-xl border border-blue-400/30 bg-blue-400/10 text-center hover:bg-blue-400/20 transition-all">
+              <Link to="/sell?metal=silver" className="p-4 rounded-xl border border-blue-400/30 bg-blue-400/10 text-center hover:bg-blue-400/20 transition-all">
                 <p className="text-2xl mb-2">🥈</p>
                 <p className="text-white font-bold">Silver</p>
                 <p className="text-white/40 text-[10px]">Asset</p>

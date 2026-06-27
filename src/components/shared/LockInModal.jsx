@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Lock, X, ArrowRight, Shield } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function LockInModal({ isOpen, onClose, title, message, primaryActionText, secondaryActionText, onSecondaryAction }) {
+export default function LockInModal({ isOpen, onClose, title, message, primaryActionText, secondaryActionText, onSecondaryAction, metalType = 'gold' }) {
   const navigate = useNavigate();
 
   if (!isOpen) return null;
@@ -15,9 +15,9 @@ export default function LockInModal({ isOpen, onClose, title, message, primaryAc
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="relative w-full max-w-md overflow-hidden rounded-3xl bg-[#0A0A0A] border border-[#D4AF37]/30 shadow-[0_0_50px_rgba(212,175,55,0.15)]"
+          className={`relative w-full max-w-md overflow-hidden rounded-3xl bg-[#0A0A0A] border shadow-[0_0_50px_rgba(212,175,55,0.15)] ${metalType === 'silver' ? 'border-gray-400/30 shadow-[0_0_50px_rgba(156,163,175,0.15)]' : 'border-[#D4AF37]/30'}`}
         >
-          <div className="absolute top-0 right-0 w-64 h-64 bg-[#D4AF37]/10 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none"></div>
+          <div className={`absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none ${metalType === 'silver' ? 'bg-gray-400/10' : 'bg-[#D4AF37]/10'}`}></div>
 
           <button
             onClick={onClose}
@@ -27,24 +27,24 @@ export default function LockInModal({ isOpen, onClose, title, message, primaryAc
           </button>
 
           <div className="p-8 text-center relative z-10">
-            <div className="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-br from-[#D4AF37]/20 to-transparent flex items-center justify-center text-[#D4AF37] mb-6 shadow-[0_0_30px_rgba(212,175,55,0.2)]">
+            <div className={`w-20 h-20 mx-auto rounded-3xl bg-gradient-to-br flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(212,175,55,0.2)] ${metalType === 'silver' ? 'from-gray-400/20 to-transparent text-gray-300 shadow-[0_0_30px_rgba(156,163,175,0.2)]' : 'from-[#D4AF37]/20 to-transparent text-[#D4AF37]'}`}>
               <Lock size={32} />
             </div>
 
             <h2 className="text-2xl font-black text-white mb-2">{title}</h2>
             <p className="text-white/60 text-sm leading-relaxed mb-8">{message}</p>
 
-            <div className="card-premium border-white/5 p-4 mb-8 bg-white/[0.02] text-left">
+            <div className={`card-premium border-white/5 p-4 mb-8 bg-white/[0.02] text-left`}>
               <div className="flex items-center gap-3">
-                <Shield className="text-[#D4AF37] shrink-0" size={16} />
-                <p className="text-white/80 text-xs font-medium">Earn up to 12% guaranteed extra return by locking your gold securely with us.</p>
+                <Shield className={`shrink-0 ${metalType === 'silver' ? 'text-gray-300' : 'text-[#D4AF37]'}`} size={16} />
+                <p className="text-white/80 text-xs font-medium">Earn up to 12% guaranteed extra return by locking your {metalType} securely with us.</p>
               </div>
             </div>
 
             <div className="space-y-3">
               <button
-                onClick={() => navigate('/lock-in')}
-                className="w-full btn-gold py-4 text-sm font-bold flex items-center justify-center gap-2"
+                onClick={() => navigate(`/lock-in?metal=${metalType}`)}
+                className={`w-full py-4 text-sm font-bold flex items-center justify-center gap-2 rounded-xl transition-all ${metalType === 'silver' ? 'bg-gray-300 text-black hover:bg-white' : 'btn-gold'}`}
               >
                 {primaryActionText}
                 <ArrowRight size={16} />

@@ -6,13 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
 
 export default function SilverPage() {
-  const [tab, setTab] = useState(() => {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('tab') === 'sell' ? 'sell' : 'buy';
-  });
-  const [showSellUpsell, setShowSellUpsell] = useState(true);
   const [amount, setAmount] = useState('');
-  const [gramsToSell, setGramsToSell] = useState('');
   const [rate, setRate] = useState(null);
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('UPI');
@@ -29,7 +23,6 @@ export default function SilverPage() {
   }, []);
 
   const buyGrams = rate && amount ? (parseFloat(amount) / rate.rate_per_gram) : 0;
-  const sellValue = rate && gramsToSell ? (parseFloat(gramsToSell) * rate.rate_per_gram) : 0;
 
   const handleBuy = async () => {
     if (!amount || parseFloat(amount) < 100) {
@@ -37,48 +30,74 @@ export default function SilverPage() {
       return;
     }
     setLoading(true);
-    try {
-      const res = await api.post('/silver/buy.php', {
-        amount_inr: parseFloat(amount),
-        payment_method: paymentMethod
-      });
-      if (res.data.success) {
-        toast.success(`Successfully acquired ${formatGrams(res.data.data.silver_grams)} silver!`);
-        setAmount('');
-        // update balance
-        setSilverBalance(prev => prev + res.data.data.silver_grams);
-      } else {
-        toast.error(res.data.message);
-      }
-    } catch (err) {
-      toast.error('Transaction failed');
-    }
-    setLoading(false);
-  };
 
-  const handleSell = async () => {
-    if (!gramsToSell || parseFloat(gramsToSell) <= 0) {
-      toast.error('Enter a valid amount to sell');
-      return;
-    }
-    if (parseFloat(gramsToSell) > silverBalance) {
-      toast.error('Insufficient silver balance');
-      return;
-    }
-    setLoading(true);
-    try {
-      const res = await api.post('/silver/sell.php', {
-        grams: parseFloat(gramsToSell)
-      });
-      if (res.data.success) {
-        toast.success(`Successfully sold silver for ₹${res.data.data.amount_inr}!`);
-        setGramsToSell('');
-        setSilverBalance(prev => prev - parseFloat(gramsToSell));
-      } else {
-        toast.error(res.data.message);
+    if (paymentMethod !== 'UPI') {
+      try {
+        const res = await api.post('/silver/buy.php', {
+          amount_inr: parseFloat(amount),
+          payment_method: paymentMethod
+        });
+        if (res.data.success) {
+          toast.success(`Successfully acquired ${formatGrams(res.data.data.silver_grams)} silver!`);
+          setAmount('');
+          setSilverBalance(prev => prev + res.data.data.silver_grams);
+        } else {
+          toast.error(res.data.message);
+        }
+      } catch (err) {
+        toast.error('Transaction failed');
       }
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const orderRes = await api.post('/payment/create_order.php', { amount_inr: parseFloat(amount) });
+      if (!orderRes.data.success) {
+        toast.error('Failed to initiate payment');
+        setLoading(false);
+        return;
+      }
+
+      const { order_id, key } = orderRes.data.data;
+
+      const options = {
+        key: key,
+        amount: parseFloat(amount) * 100,
+        currency: 'INR',
+        name: 'SilverVault',
+        description: `Purchase of ${buyGrams.toFixed(4)}g Silver`,
+        order_id: order_id,
+        handler: async function (response) {
+          setLoading(true);
+          try {
+            const res = await api.post('/silver/buy.php', {
+              amount_inr: parseFloat(amount),
+              payment_method: 'UPI',
+              payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature
+            });
+            if (res.data.success) {
+              toast.success(`Successfully acquired ${formatGrams(res.data.data.silver_grams)} silver!`);
+              setAmount('');
+              setSilverBalance(prev => prev + res.data.data.silver_grams);
+            } else {
+              toast.error(res.data.message);
+            }
+          } catch (err) {
+            toast.error('Transaction failed');
+          }
+          setLoading(false);
+        },
+        prefill: { name: user?.name, contact: user?.mobile },
+        theme: { color: '#9CA3AF' } // Silver color theme
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
     } catch (err) {
-      toast.error('Transaction failed');
+      toast.error('Failed to initiate Razorpay');
     }
     setLoading(false);
   };
@@ -96,27 +115,11 @@ export default function SilverPage() {
         </div>
       </header>
 
-      <div className="flex gap-4 p-1 bg-white/5 rounded-xl border border-white/5 w-fit">
-        <button 
-          onClick={() => setTab('buy')}
-          className={`px-6 py-2 rounded-lg font-bold text-sm transition-all ${tab === 'buy' ? 'bg-gray-300 text-black shadow-lg' : 'text-white/40 hover:text-white'}`}
-        >
-          Buy Silver
-        </button>
-        <button 
-          onClick={() => setTab('sell')}
-          className={`px-6 py-2 rounded-lg font-bold text-sm transition-all ${tab === 'sell' ? 'bg-gray-300 text-black shadow-lg' : 'text-white/40 hover:text-white'}`}
-        >
-          Sell Silver
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-[#1a1a1a] border border-white/5 rounded-3xl p-8 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-gray-400/5 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none"></div>
             
-            {tab === 'buy' ? (
               <form onSubmit={e => { e.preventDefault(); handleBuy(); }} className="relative z-10 space-y-8">
                 <div className="space-y-4">
                   <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Investment Amount</label>
@@ -179,73 +182,6 @@ export default function SilverPage() {
                   {loading ? <div className="w-6 h-6 border-3 border-black/30 border-t-black rounded-full animate-spin"></div> : <><Wallet size={20} /> Purchase Silver <ArrowRight size={20} /></>}
                 </button>
               </form>
-            ) : tab === 'sell' && showSellUpsell ? (
-              <div className="relative z-10 space-y-6">
-                <div className="text-center mb-8">
-                  <h2 className="text-2xl font-black text-white">Wait! Don't sell just yet.</h2>
-                  <p className="text-white/40 text-sm mt-2">Get more value from your silver by locking it in our vault.</p>
-                </div>
-                
-                <Link to="/lock-in?metal=silver" className="card-premium group hover:border-gray-300/50 transition-all p-6 flex flex-col sm:flex-row items-center gap-6 text-left relative overflow-hidden bg-gray-400/5 border-gray-400/20 block">
-                  <div className="w-16 h-16 shrink-0 rounded-2xl bg-gradient-to-br from-gray-400/20 to-transparent flex items-center justify-center text-gray-300 group-hover:scale-110 transition-all duration-500">
-                    <Lock size={28} />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-xl font-black text-white mb-1">Get up to 12% Extra</h3>
-                    <p className="text-gray-300 font-bold text-sm mb-2">Lock your silver for a period</p>
-                    <p className="text-white/40 text-xs leading-relaxed">Earn up to 12% guaranteed extra returns instead of selling now.</p>
-                  </div>
-                  <div className="shrink-0 flex items-center gap-2 text-gray-300 font-bold text-xs uppercase tracking-widest group-hover:gap-3 transition-all bg-white/5 px-4 py-2 rounded-lg">
-                    Explore Plans <ArrowRight size={14} />
-                  </div>
-                </Link>
-
-                <div className="relative flex justify-center mt-6">
-                  <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/10"></div></div>
-                  <span className="bg-[#1a1a1a] px-4 text-white/30 text-[10px] font-bold uppercase tracking-widest relative">Or</span>
-                </div>
-
-                <button 
-                  onClick={() => setShowSellUpsell(false)} 
-                  className="w-full mt-6 card-premium border-red-500/20 bg-red-500/5 hover:bg-red-500/10 text-red-400 font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all"
-                >
-                  <Wallet size={18} /> Continue to Sell Silver
-                </button>
-              </div>
-            ) : (
-              <form onSubmit={e => { e.preventDefault(); handleSell(); }} className="relative z-10 space-y-8">
-                <div className="space-y-4">
-                  <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Sell Amount (Grams)</label>
-                  <div className="relative group">
-                    <input
-                      type="number"
-                      step="0.0001"
-                      value={gramsToSell}
-                      onChange={e => setGramsToSell(e.target.value)}
-                      placeholder="0.0000"
-                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-6 text-4xl font-black text-white focus:outline-none focus:border-gray-300 transition-all"
-                    />
-                    <div className="absolute inset-y-0 right-0 pr-6 flex items-center pointer-events-none text-white/20 font-black text-2xl">
-                      g
-                    </div>
-                  </div>
-                  <button type="button" onClick={() => setGramsToSell(String(silverBalance))} className="text-xs text-amber-500 font-semibold mt-2 block ml-auto">Sell Max ({silverBalance}g)</button>
-                </div>
-
-                {sellValue > 0 && (
-                  <div className="bg-gray-400/10 border border-gray-400/20 rounded-2xl p-6 flex items-center justify-between">
-                    <div>
-                      <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mb-1">Estimated Value</p>
-                      <p className="text-gray-300 text-2xl font-black">{formatINR(sellValue)}</p>
-                    </div>
-                  </div>
-                )}
-
-                <button type="submit" disabled={loading || !rate || !gramsToSell} className="w-full bg-gray-300 text-black font-bold py-5 rounded-2xl flex items-center justify-center gap-3 hover:bg-white transition-colors">
-                  {loading ? <div className="w-6 h-6 border-3 border-black/30 border-t-black rounded-full animate-spin"></div> : <><RefreshCcw size={20} /> Sell Silver <ArrowRight size={20} /></>}
-                </button>
-              </form>
-            )}
           </div>
         </div>
 

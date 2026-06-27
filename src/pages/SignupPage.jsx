@@ -41,48 +41,22 @@ export default function SignupPage() {
   };
 
   const validateStep = (currentStep) => {
-    switch (currentStep) {
-      case 1:
-        if (!formData.name || !formData.mobile || !formData.email) {
-          toast.error('Please fill all personal details');
-          return false;
-        }
-        if (!/^[6-9]\d{9}$/.test(formData.mobile)) {
-          toast.error('Please enter a valid 10-digit mobile number');
-          return false;
-        }
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-          toast.error('Please enter a valid email address');
-          return false;
-        }
-        return true;
-      case 2:
-        if (!formData.address || !formData.city || !formData.state || !formData.pincode) {
-          toast.error('Please fill all address details');
-          return false;
-        }
-        if (!/^\d{6}$/.test(formData.pincode)) {
-          toast.error('Please enter a valid 6-digit pincode');
-          return false;
-        }
-        return true;
-      case 3:
-        if (!formData.aadhar_number || !formData.pan_number) {
-          toast.error('Please fill all identity details');
-          return false;
-        }
-        if (!/^\d{12}$/.test(formData.aadhar_number)) {
-          toast.error('Please enter a valid 12-digit Aadhar number');
-          return false;
-        }
-        if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(formData.pan_number.toUpperCase())) {
-          toast.error('Please enter a valid PAN number');
-          return false;
-        }
-        return true;
-      default:
-        return true;
+    if (currentStep === 1) {
+      if (!formData.name || !formData.mobile || !formData.email) {
+        toast.error('Please fill all personal details');
+        return false;
+      }
+      if (!/^[6-9]\d{9}$/.test(formData.mobile)) {
+        toast.error('Please enter a valid 10-digit mobile number');
+        return false;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+        toast.error('Please enter a valid email address');
+        return false;
+      }
+      return true;
     }
+    return true;
   };
 
   const nextStep = () => {
@@ -94,13 +68,13 @@ export default function SignupPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateStep(3)) return;
+    if (!validateStep(1)) return;
     setLoading(true);
     try {
       const res = await api.post('/auth/signup.php', formData);
       if (res.data.success) {
         toast.success(res.data.message, { duration: 5000 });
-        setStep(4); // Success step
+        setStep(2); // Success step
       } else {
         toast.error(res.data.message);
       }
@@ -111,9 +85,7 @@ export default function SignupPage() {
   };
 
   const steps = [
-    { title: 'Personal', icon: User },
-    { title: 'Address', icon: MapPin },
-    { title: 'Identity', icon: ShieldCheck }
+    { title: 'Personal', icon: User }
   ];
 
   return (
@@ -235,8 +207,12 @@ export default function SignupPage() {
                       </div>
                     </div>
                   </div>
-                  <button type="button" onClick={nextStep} className="btn-gold w-full flex items-center justify-center gap-2">
-                    Next Step <ArrowRight size={18} />
+                  <button type="submit" disabled={loading} className="btn-gold w-full flex items-center justify-center gap-2">
+                    {loading ? (
+                      <div className="w-6 h-6 border-2 border-black/30 border-t-black rounded-full animate-spin"></div>
+                    ) : (
+                      <>Complete Signup <ArrowRight size={18} /></>
+                    )}
                   </button>
                 </motion.div>
               )}
@@ -244,125 +220,6 @@ export default function SignupPage() {
               {step === 2 && (
                 <motion.div
                   key="step2"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="space-y-6"
-                >
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-white/60 ml-1">Address Line</label>
-                    <div className="relative">
-                      <MapPin className="absolute left-4 top-4 text-white/20" size={18} />
-                      <textarea
-                        name="address"
-                        value={formData.address}
-                        onChange={handleChange}
-                        placeholder="123 Main St, Apartment 4B"
-                        className="input-premium pl-12 min-h-[100px] py-4"
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-white/60 ml-1">City</label>
-                      <div className="relative">
-                        <Building className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={18} />
-                        <input type="text" name="city" value={formData.city} onChange={handleChange} placeholder="Mumbai" className="input-premium pl-12" required />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-white/60 ml-1">State</label>
-                      <div className="relative">
-                        <Flag className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={18} />
-                        <input type="text" name="state" value={formData.state} onChange={handleChange} placeholder="Maharashtra" className="input-premium pl-12" required />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-white/60 ml-1">Pincode</label>
-                    <div className="relative">
-                      <Hash className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={18} />
-                      <input type="text" name="pincode" value={formData.pincode} onChange={handleChange} placeholder="400001" className="input-premium pl-12" required />
-                    </div>
-                  </div>
-                  <div className="flex gap-4">
-                    <button type="button" onClick={prevStep} className="w-1/3 px-6 py-3 rounded-xl font-bold border border-white/10 text-white hover:bg-white/5 transition-all flex items-center justify-center gap-2">
-                      <ArrowLeft size={18} /> Back
-                    </button>
-                    <button type="button" onClick={nextStep} className="btn-gold flex-1 flex items-center justify-center gap-2">
-                      Next Step <ArrowRight size={18} />
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-
-              {step === 3 && (
-                <motion.div
-                  key="step3"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="space-y-6"
-                >
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-white/60 ml-1">Aadhar Number (12 Digits)</label>
-                    <div className="relative">
-                      <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={18} />
-                      <input
-                        type="text"
-                        name="aadhar_number"
-                        value={formData.aadhar_number}
-                        onChange={handleChange}
-                        placeholder="1234 5678 9012"
-                        className="input-premium pl-12"
-                        maxLength={12}
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-white/60 ml-1">PAN Number</label>
-                    <div className="relative">
-                      <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={18} />
-                      <input
-                        type="text"
-                        name="pan_number"
-                        value={formData.pan_number}
-                        onChange={handleChange}
-                        placeholder="ABCDE1234F"
-                        className="input-premium pl-12 uppercase"
-                        maxLength={10}
-                        required
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="bg-[#D4AF37]/5 border border-[#D4AF37]/20 p-4 rounded-xl flex gap-3">
-                    <ShieldCheck className="text-[#D4AF37] shrink-0" size={20} />
-                    <p className="text-[11px] text-white/60 leading-relaxed">
-                      Your identity information is encrypted and securely stored. We use this for KYC compliance as per government regulations for gold transactions.
-                    </p>
-                  </div>
-
-                  <div className="flex gap-4">
-                    <button type="button" onClick={prevStep} className="w-1/3 px-6 py-3 rounded-xl font-bold border border-white/10 text-white hover:bg-white/5 transition-all flex items-center justify-center gap-2">
-                      <ArrowLeft size={18} /> Back
-                    </button>
-                    <button type="submit" disabled={loading} className="btn-gold flex-1 flex items-center justify-center gap-2">
-                      {loading ? (
-                        <div className="w-6 h-6 border-2 border-black/30 border-t-black rounded-full animate-spin"></div>
-                      ) : (
-                        <>Complete Signup <ArrowRight size={18} /></>
-                      )}
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-
-              {step === 4 && (
-                <motion.div
-                  key="step4"
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   className="text-center py-8 space-y-6"
@@ -387,7 +244,7 @@ export default function SignupPage() {
           </form>
         </div>
 
-        {step < 4 && (
+        {step < 2 && (
           <p className="text-center mt-8 text-white/40 text-sm">
             Already have an account? <Link to="/login" className="text-[#D4AF37] font-bold hover:underline">Sign In</Link>
           </p>

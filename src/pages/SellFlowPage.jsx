@@ -1,9 +1,22 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { TrendingUp, Wallet, ArrowRight, Lock } from 'lucide-react';
 
 export default function SellFlowPage() {
-  const [metalType, setMetalType] = useState('gold');
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const initialMetal = params.get('metal') === 'silver' ? 'silver' : 'gold';
+
+  const [metalType, setMetalType] = useState(initialMetal);
+
+  useEffect(() => {
+    if (params.get('metal') === 'silver') {
+      setMetalType('silver');
+    } else if (params.get('metal') === 'gold') {
+      setMetalType('gold');
+    }
+  }, [location.search]);
+
   const isGold = metalType === 'gold';
   const themeColor = isGold ? '#D4AF37' : '#9CA3AF';
   const themeColorText = isGold ? 'text-[#D4AF37]' : 'text-gray-300';
@@ -52,7 +65,7 @@ export default function SellFlowPage() {
           </div>
         </Link>
 
-        <Link to={isGold ? "/sell/now" : "/silver?tab=sell"} className="card-premium group hover:border-red-500/50 transition-all p-8 flex flex-col items-center gap-6 text-center relative overflow-hidden">
+        <Link to={isGold ? "/sell/now" : "/sell/silver/now"} className="card-premium group hover:border-red-500/50 transition-all p-8 flex flex-col items-center gap-6 text-center relative overflow-hidden">
           <div className="absolute top-0 left-0 w-64 h-64 bg-red-500/5 rounded-full blur-3xl -ml-32 -mt-32 pointer-events-none group-hover:bg-red-500/10 transition-colors"></div>
           <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-red-500/20 to-transparent flex items-center justify-center text-red-500 group-hover:scale-110 group-hover:shadow-[0_0_30px_rgba(239,68,68,0.3)] transition-all duration-500">
             <Wallet size={32} />

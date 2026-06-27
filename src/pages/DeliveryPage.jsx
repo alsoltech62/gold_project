@@ -6,7 +6,9 @@ import api, { formatGrams } from '../utils/api';
 import LockInModal from '../components/shared/LockInModal';
 
 export default function DeliveryPage() {
-  const [balance, setBalance] = useState(0);
+  const [metalType, setMetalType] = useState('gold');
+  const [goldBalance, setGoldBalance] = useState(0);
+  const [silverBalance, setSilverBalance] = useState(0);
   const [grams, setGrams] = useState('');
   const [address, setAddress] = useState({
     street: '',
@@ -25,8 +27,11 @@ export default function DeliveryPage() {
 
   useEffect(() => {
     api.get('/user/dashboard.php')
-      .then(r => setBalance(r.data.data.total_gold_grams || 0))
-      .catch(() => setBalance(0));
+      .then(r => {
+        setGoldBalance(r.data.data.total_gold_grams || 0);
+        setSilverBalance(r.data.data.total_silver_grams || 0);
+      })
+      .catch(() => { setGoldBalance(0); setSilverBalance(0); });
       
     api.get('/user/deliveries.php')
       .then(r => setHistory(r.data.data || []))
@@ -41,6 +46,8 @@ export default function DeliveryPage() {
       .catch(() => {});
   }, []);
 
+  const balance = metalType === 'gold' ? goldBalance : silverBalance;
+  
   const handleRequest = async e => {
     e.preventDefault();
     if (!grams || parseFloat(grams) < 1) { 
@@ -48,7 +55,7 @@ export default function DeliveryPage() {
       return; 
     }
     if (parseFloat(grams) > balance) { 
-      toast.error('Insufficient gold balance in your vault'); 
+      toast.error(`Insufficient ${metalType} balance in your vault`); 
       return; 
     }
     if (!address.street || !address.city || !address.pincode) { 
@@ -63,7 +70,8 @@ export default function DeliveryPage() {
     setLoading(true);
     try {
       const res = await api.post('/delivery/request.php', {
-        gold_grams: parseFloat(grams),
+        metal_type: metalType,
+        grams: parseFloat(grams),
         delivery_address: `${address.street}, ${address.city}, ${address.state} - ${address.pincode}`,
         city: address.city,
         state: address.state,
@@ -71,10 +79,13 @@ export default function DeliveryPage() {
       });
       
       if (res.data.success) {
-        toast.success('Physical gold delivery request submitted!', { icon: '📦' });
+        toast.success(`Physical ${metalType} delivery request submitted!`, { icon: '📦' });
         setGrams('');
         // Refresh data
-        api.get('/user/dashboard.php').then(r => setBalance(r.data.data.total_gold_grams || 0));
+        api.get('/user/dashboard.php').then(r => {
+          setGoldBalance(r.data.data.total_gold_grams || 0);
+          setSilverBalance(r.data.data.total_silver_grams || 0);
+        });
         api.get('/user/deliveries.php').then(r => setHistory(r.data.data || []));
       } else {
         toast.error(res.data.message);
@@ -87,19 +98,35 @@ export default function DeliveryPage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-8">
-      <header>
-        <h1 className="text-3xl font-black text-white tracking-tight">Physical Claim</h1>
-        <p className="text-white/40 text-sm font-medium mt-1">Request secure delivery of your 24K gold assets</p>
+      <header className="text-center md:text-left md:flex md:justify-between md:items-end">
+        <div>
+          <h1 className="text-3xl font-black text-white tracking-tight">Physical Claim</h1>
+          <p className="text-white/40 text-sm font-medium mt-1">Request secure delivery of your physical assets</p>
+        </div>
+        <div className="flex gap-4 p-1 bg-white/5 rounded-xl border border-white/5 w-fit mt-4 md:mt-0">
+          <button 
+            onClick={() => setMetalType('gold')}
+            className={`px-6 py-2 rounded-lg font-bold text-sm transition-all ${metalType === 'gold' ? 'bg-[#D4AF37] text-black shadow-[0_0_15px_rgba(212,175,55,0.4)]' : 'text-white/40 hover:text-white'}`}
+          >
+            Gold
+          </button>
+          <button 
+            onClick={() => setMetalType('silver')}
+            className={`px-6 py-2 rounded-lg font-bold text-sm transition-all ${metalType === 'silver' ? 'bg-gray-300 text-black shadow-lg' : 'text-white/40 hover:text-white'}`}
+          >
+            Silver
+          </button>
+        </div>
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
           <div className="card-premium border-white/5 p-8 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none"></div>
+            <div className={`absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none transition-colors ${metalType === 'gold' ? 'bg-[#D4AF37]/5' : 'bg-gray-400/5'}`}></div>
             
             <form onSubmit={handleRequest} className="relative z-10 space-y-8">
               <div className="space-y-4">
-                <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Gold Quantity (min 1g)</label>
+                <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">{metalType} Quantity (min 1g)</label>
                 <div className="relative group">
                   <input
                     type="number"
@@ -192,7 +219,7 @@ export default function DeliveryPage() {
                         <Truck size={18} />
                       </div>
                       <div>
-                        <p className="text-white font-bold text-sm">{formatGrams(item.gold_grams)} Shipment</p>
+                        <p className="text-white font-bold text-sm">{formatGrams(item.gold_grams || item.grams)} Shipment ({item.metal_type || 'Gold'})</p>
                         <p className="text-white/30 text-[10px] font-bold uppercase tracking-widest mt-1">
                           Requested {item.created_at ? format(new Date(item.created_at), 'dd MMM yyyy') : 'Recently'}
                         </p>
@@ -221,7 +248,7 @@ export default function DeliveryPage() {
               <div>
                 <p className="text-white/30 text-[10px] font-bold uppercase tracking-[0.2em] mb-2">Redeemable Balance</p>
                 <p className="text-3xl font-black text-white">{formatGrams(balance)}</p>
-                <p className="text-white/20 text-[10px] font-bold uppercase tracking-wider mt-1">Pure Gold Available</p>
+                <p className="text-white/20 text-[10px] font-bold uppercase tracking-wider mt-1">Pure {metalType} Available</p>
               </div>
 
               <div className="pt-6 border-t border-white/5 space-y-4">
@@ -260,7 +287,7 @@ export default function DeliveryPage() {
           <div className="card-premium border-[#D4AF37]/20 bg-[#D4AF37]/5 p-6">
             <p className="text-white font-black text-sm mb-2">Pure Craftsmanship</p>
             <p className="text-white/40 text-[10px] font-bold uppercase tracking-wider leading-relaxed">
-              Every delivery includes a Certificate of Authenticity and BIS Hallmarked 24K Gold coins or bars.
+              Every delivery includes a Certificate of Authenticity and BIS Hallmarked 24K Gold or 99.9% Silver coins or bars.
             </p>
           </div>
         </div>
@@ -269,13 +296,14 @@ export default function DeliveryPage() {
         isOpen={showLockIn}
         onClose={() => setShowLockIn(false)}
         title="Earn More Before Delivery"
-        message="If you want, you can get additional returns by locking your gold for a specific period before taking delivery."
+        message={`If you want, you can get additional returns by locking your ${metalType} for a specific period before taking delivery.`}
         primaryActionText="Lock & Earn More"
         secondaryActionText="Continue Delivery"
         onSecondaryAction={() => {
           setShowLockIn(false);
           submitDelivery();
         }}
+        metalType={metalType}
       />
     </div>
   );

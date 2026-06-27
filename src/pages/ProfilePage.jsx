@@ -56,6 +56,48 @@ export default function ProfilePage() {
               <Field label="PAN Number" name="pan_number" placeholder="ABCDE1234F" />
             </div>
           </div>
+          
+          <div className="pt-2 border-t border-[#2a2a2a]">
+            <p className="text-gray-500 text-xs mb-4">Refer & Earn</p>
+            <div className="bg-[#1a1a1a] p-4 rounded-xl border border-[#2a2a2a]">
+              <p className="text-sm text-gray-400 mb-1">Your Referral Code</p>
+              <div className="flex items-center justify-between">
+                <span className="text-xl font-bold text-white tracking-widest">{form.mobile || '---'}</span>
+                <div className="flex gap-2">
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(form.mobile);
+                      toast.success('Referral code copied!');
+                    }}
+                    className="px-4 py-2 bg-yellow-600/10 text-yellow-500 rounded-lg text-sm font-bold hover:bg-yellow-600/20 transition-colors"
+                  >
+                    Copy Code
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      if (navigator.share) {
+                        navigator.share({
+                          title: 'Join Gold Savings',
+                          text: `Use my referral code ${form.mobile} to sign up and earn rewards!`,
+                          url: `https://gold.foodpulse.in/signup?ref=${form.mobile}`
+                        }).catch(console.error);
+                      } else {
+                        navigator.clipboard.writeText(`https://gold.foodpulse.in/signup?ref=${form.mobile}`);
+                        toast.success('Referral link copied!');
+                      }
+                    }}
+                    className="px-4 py-2 bg-blue-600/10 text-blue-500 rounded-lg text-sm font-bold hover:bg-blue-600/20 transition-colors"
+                  >
+                    Share Link
+                  </button>
+                </div>
+              </div>
+              <p className="text-xs text-gray-500 mt-2">Share this code with your friends and earn rewards when they sign up.</p>
+            </div>
+          </div>
+
           <button type="submit" disabled={loading} className="w-full gold-gradient text-black font-bold py-3 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50">
             {loading ? 'Saving...' : 'Save Profile'}
           </button>

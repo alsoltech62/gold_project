@@ -12,6 +12,7 @@ import BuyGoldPage from './pages/BuyGoldPage';
 import SipPage from './pages/SipPage';
 import SellFlowPage from './pages/SellFlowPage';
 import SellGoldPage from './pages/SellGoldPage';
+import SellSilverPage from './pages/SellSilverPage';
 import LockInPage from './pages/LockInPage';
 import DeliveryPage from './pages/DeliveryPage';
 import ProfilePage from './pages/ProfilePage';
@@ -87,6 +88,7 @@ function AppContent() {
           <Route path="buy/sip" element={<SipPage />} />
           <Route path="sell" element={<SellFlowPage />} />
           <Route path="sell/now" element={<SellGoldPage />} />
+          <Route path="sell/silver/now" element={<SellSilverPage />} />
           <Route path="lock-in" element={<LockInPage />} />
           <Route path="silver" element={<SilverPage />} />
           <Route path="transactions" element={<TransactionsPage />} />

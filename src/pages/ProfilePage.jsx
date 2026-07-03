@@ -4,7 +4,7 @@ import { User } from 'lucide-react';
 import api from '../utils/api';
 
 export default function ProfilePage() {
-  const [form, setForm] = useState({ name:'', email:'', address:'', city:'', state:'', pincode:'', aadhar_number:'', pan_number:'' });
+  const [form, setForm] = useState({ name:'', email:'', address:'', city:'', state:'', pincode:'', aadhar_number:'', pan_number:'', dob:'' });
   const [loading, setLoading] = useState(false);
 
   useEffect(() => { api.get('/user/profile.php').then(r => setForm(r.data.data || {})); }, []);
@@ -17,6 +17,29 @@ export default function ProfilePage() {
       toast.success('Profile updated!');
     } catch { toast.error('Update failed'); }
     setLoading(false);
+  };
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const formData = new FormData();
+    formData.append('profile_photo', file);
+    
+    const loadingToast = toast.loading('Uploading photo...');
+    try {
+      const res = await api.post('/user/upload_profile_photo.php', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      if (res.data.success) {
+        setForm({ ...form, profile_photo: res.data.profile_photo });
+        toast.success('Photo uploaded!', { id: loadingToast });
+      } else {
+        toast.error(res.data.message || 'Upload failed', { id: loadingToast });
+      }
+    } catch (err) {
+      toast.error('Upload failed', { id: loadingToast });
+    }
   };
 
   const Field = ({ label, name, placeholder, type='text' }) => (
@@ -32,8 +55,18 @@ export default function ProfilePage() {
       <h1 className="text-2xl font-bold text-white mb-6">My Profile</h1>
       <div className="card-dark p-6">
         <div className="flex items-center gap-4 mb-6 pb-6 border-b border-[#2a2a2a]">
-          <div className="w-16 h-16 rounded-full gold-gradient flex items-center justify-center text-black font-bold text-2xl">
-            {form.name?.[0]?.toUpperCase() || <User size={28} />}
+          <div className="relative group">
+            <div className="w-20 h-20 rounded-full gold-gradient flex items-center justify-center text-black font-bold text-2xl overflow-hidden">
+              {form.profile_photo ? (
+                <img src={`https://gold.alsoltech.in${form.profile_photo}`} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                form.name?.[0]?.toUpperCase() || <User size={28} />
+              )}
+            </div>
+            <label className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full cursor-pointer">
+              <span className="text-white text-xs">Upload</span>
+              <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
+            </label>
           </div>
           <div>
             <h2 className="text-white font-semibold text-lg">{form.name || 'User'}</h2>
@@ -50,8 +83,19 @@ export default function ProfilePage() {
           </div>
           <Field label="Pincode" name="pincode" placeholder="Pincode" />
           <div className="pt-2 border-t border-[#2a2a2a]">
+            <p className="text-gray-500 text-xs mb-4">Bank Account Details</p>
+            <div className="space-y-4">
+              <Field label="Bank Name" name="bank_name" placeholder="e.g., State Bank of India" />
+              <Field label="Account Holder Name" name="account_holder_name" placeholder="Name as per bank" />
+              <Field label="Account Number" name="account_number" placeholder="Enter account number" />
+              <Field label="IFSC Code" name="ifsc_code" placeholder="Enter IFSC code" />
+            </div>
+          </div>
+
+          <div className="pt-2 border-t border-[#2a2a2a]">
             <p className="text-gray-500 text-xs mb-4">KYC Information</p>
             <div className="space-y-4">
+              <Field label="Date of Birth" name="dob" placeholder="YYYY-MM-DD" type="date" />
               <Field label="Aadhar Number" name="aadhar_number" placeholder="12-digit Aadhar" />
               <Field label="PAN Number" name="pan_number" placeholder="ABCDE1234F" />
             </div>

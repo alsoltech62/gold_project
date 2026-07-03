@@ -10,6 +10,9 @@ export default function WalletPage() {
   const [amount, setAmount] = useState('');
   const [walletType, setWalletType] = useState('inr');
   const [loading, setLoading] = useState(false);
+  const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [withdrawLoading, setWithdrawLoading] = useState(false);
   
   const [sipActive, setSipActive] = useState(false);
   const [sipAmount, setSipAmount] = useState('');
@@ -76,6 +79,26 @@ export default function WalletPage() {
     setSipLoading(false);
   };
 
+  const handleWithdraw = async (e) => {
+    e.preventDefault();
+    if (!withdrawAmount || parseFloat(withdrawAmount) <= 0) return;
+    setWithdrawLoading(true);
+    try {
+      const res = await api.post('/user/withdraw.php', { amount: parseFloat(withdrawAmount) });
+      if (res.data.success) {
+        toast.success(res.data.message);
+        setShowWithdrawModal(false);
+        setWithdrawAmount('');
+        fetchDashboard();
+      } else {
+        toast.error(res.data.message);
+      }
+    } catch (err) {
+      toast.error('Withdrawal request failed');
+    }
+    setWithdrawLoading(false);
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       <header>
@@ -90,7 +113,15 @@ export default function WalletPage() {
           
           <div className="mb-8 relative z-10 flex gap-8">
             <div>
-              <p className="text-white/40 text-xs font-bold uppercase tracking-widest mb-1">INR Wallet</p>
+              <div className="flex items-center gap-2 mb-1">
+                <p className="text-white/40 text-xs font-bold uppercase tracking-widest">INR Wallet</p>
+                <button 
+                  onClick={() => setShowWithdrawModal(true)}
+                  className="bg-white/10 hover:bg-white/20 text-white text-[10px] px-2 py-1 rounded transition-colors"
+                >
+                  Withdraw
+                </button>
+              </div>
               <p className="text-4xl font-black text-white">{formatINR(inrBalance)}</p>
             </div>
             <div>
@@ -222,6 +253,38 @@ export default function WalletPage() {
           )}
         </div>
       </div>
+
+      {showWithdrawModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-[#111] border border-white/10 rounded-3xl p-6 w-full max-w-sm space-y-6 animate-in zoom-in-95 duration-200">
+            <h3 className="text-xl font-bold text-white text-center">Withdraw Funds</h3>
+            <p className="text-white/50 text-sm text-center -mt-4">Available: {formatINR(inrBalance)}</p>
+            <form onSubmit={handleWithdraw} className="space-y-4">
+              <div>
+                <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] mb-2 block">Amount to Withdraw</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-amber-500 font-black">₹</div>
+                  <input 
+                    type="number" 
+                    value={withdrawAmount}
+                    onChange={e => setWithdrawAmount(e.target.value)}
+                    placeholder="0.00"
+                    max={inrBalance}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-4 text-xl font-bold text-white focus:border-amber-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+              <p className="text-[10px] text-white/40 text-center">
+                Please ensure your bank details are updated in your Profile before withdrawing.
+              </p>
+              <div className="grid grid-cols-2 gap-4 pt-2">
+                <button type="button" onClick={() => setShowWithdrawModal(false)} className="py-3 rounded-xl border border-white/10 text-white hover:bg-white/5 transition-all font-bold">Cancel</button>
+                <button type="submit" disabled={withdrawLoading || !withdrawAmount} className="py-3 rounded-xl bg-amber-500 text-black font-bold hover:bg-amber-400 transition-all disabled:opacity-50">Confirm</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

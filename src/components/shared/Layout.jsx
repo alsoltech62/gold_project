@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { NavLink, Link, useNavigate, useLocation, useOutlet } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { LayoutDashboard, ShoppingCart, TrendingDown, TrendingUp, History, Truck, User, Settings, LogOut, Menu, X, Bell, Shield, ChevronRight, Wallet, Ticket, Star, FileText, Lock } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, TrendingDown, TrendingUp, History, Truck, User, Settings, LogOut, Menu, X, Bell, Shield, ChevronRight, Wallet, Ticket, Star, FileText, Lock, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import logoW from '../../assets/logo-w.png';
 
@@ -12,6 +12,7 @@ const userNav = [
   { isAction: true, action: 'sell', icon: TrendingDown, label: 'Sell' },
   { to: '/transactions', icon: History, label: 'Transactions' },
   { to: '/lock-in', icon: Lock, label: 'Lock & Earn' },
+  { to: '/network', icon: Star, label: 'Refer & Earn' },
   { to: '/delivery', icon: Truck, label: 'Delivery' },
   { to: '/profile', icon: User, label: 'Profile' },
   { to: '/support', icon: Ticket, label: 'Support' },
@@ -25,6 +26,7 @@ const adminNav = [
   { to: '/admin/sip-history', icon: TrendingUp, label: 'SIP Management' },
   { to: '/admin/gold-rate', icon: Settings, label: 'Gold Rate' },
   { to: '/admin/deliveries', icon: Truck, label: 'Deliveries' },
+  { to: '/admin/withdrawals', icon: Wallet, label: 'Withdrawals' },
   { to: '/admin/support-tickets', icon: Ticket, label: 'Support Tickets' },
   { to: '/admin/notifications', icon: Bell, label: 'Send Notification' },
   { to: '/admin/settings', icon: Settings, label: 'Settings' },
@@ -153,9 +155,20 @@ export default function Layout({ isAdmin }) {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden relative">
         <header className="h-20 bg-[#0A0A0A]/80 backdrop-blur-xl border-b border-white/5 flex items-center justify-between px-8 z-30">
-          <button className="lg:hidden p-2 text-white/50 hover:text-[#D4AF37] transition-colors" onClick={() => setOpen(!open)}>
-            {open ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          <div className="flex items-center gap-3">
+            {location.pathname !== '/dashboard' && location.pathname !== '/admin/dashboard' && (
+              <button 
+                onClick={() => navigate(-1)} 
+                className="p-2 bg-white/5 hover:bg-white/10 rounded-xl text-white transition-colors"
+                title="Go Back"
+              >
+                <ArrowLeft size={20} />
+              </button>
+            )}
+            <button className="lg:hidden p-2 text-white/50 hover:text-[#D4AF37] transition-colors" onClick={() => setOpen(!open)}>
+              {open ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
 
           <div className="hidden lg:flex items-center gap-2 text-white/30 text-xs font-bold uppercase tracking-[0.2em]">
             <span>Market Live</span>

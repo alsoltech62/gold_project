@@ -10,7 +10,7 @@ export default function AdminCustomers() {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(null);
-  const [form, setForm] = useState({ name:'', mobile:'', email:'', city:'', state:'' });
+  const [form, setForm] = useState({ name:'', mobile:'', email:'', city:'', state:'', dob:'' });
   const [saving, setSaving] = useState(false);
 
   const fetchCustomers = () => {
@@ -211,6 +211,7 @@ export default function AdminCustomers() {
               <Field label="Full Legal Name" name="name" icon={Users} />
               <Field label="Mobile Number" name="mobile" icon={Phone} />
               <Field label="Email Address" name="email" icon={Mail} />
+              <Field label="Date of Birth" name="dob" icon={Users} />
               <div className="grid grid-cols-2 gap-4">
                 <Field label="City" name="city" icon={MapPin} />
                 <Field label="State" name="state" icon={MapPin} />

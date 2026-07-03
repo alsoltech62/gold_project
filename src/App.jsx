@@ -26,6 +26,7 @@ import AdminDeliveries from './pages/admin/AdminDeliveries';
 import AdminSupportTickets from './pages/admin/AdminSupportTickets';
 import AdminNotificationsPage from './pages/admin/AdminNotificationsPage';
 import AdminSettings from './pages/admin/AdminSettings';
+import AdminWithdrawals from './pages/admin/AdminWithdrawals';
 import SupportPage from './pages/SupportPage';
 import NotificationsPage from './pages/NotificationsPage';
 import SilverPage from './pages/SilverPage';
@@ -35,6 +36,7 @@ import PrivacyPolicyPage from './pages/static/PrivacyPolicyPage';
 import TermsPage from './pages/static/TermsPage';
 import ReturnsPolicyPage from './pages/static/ReturnsPolicyPage';
 import ContactUsPage from './pages/static/ContactUsPage';
+import NetworkDashboardPage from './pages/NetworkDashboardPage';
 import Layout from './components/shared/Layout';
 import PublicLayout from './components/shared/PublicLayout';
 import SplashScreen from './components/shared/SplashScreen';
@@ -96,6 +98,7 @@ function AppContent() {
           <Route path="profile" element={<ProfilePage />} />
           <Route path="support" element={<SupportPage />} />
           <Route path="wallet" element={<WalletPage />} />
+          <Route path="network" element={<NetworkDashboardPage />} />
           <Route path="notifications" element={<NotificationsPage />} />
         </Route>
 
@@ -116,6 +119,7 @@ function AppContent() {
           <Route path="sip-history" element={<AdminSipHistory />} />
           <Route path="gold-rate" element={<AdminGoldRate />} />
           <Route path="deliveries" element={<AdminDeliveries />} />
+          <Route path="withdrawals" element={<AdminWithdrawals />} />
           <Route path="support-tickets" element={<AdminSupportTickets />} />
           <Route path="notifications" element={<AdminNotificationsPage />} />
           <Route path="settings" element={<AdminSettings />} />

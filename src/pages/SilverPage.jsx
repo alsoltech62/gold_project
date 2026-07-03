@@ -3,7 +3,8 @@ import toast from 'react-hot-toast';
 import { Info, ShieldCheck, Zap, ArrowRight, Wallet, RefreshCcw, Lock } from 'lucide-react';
 import api, { formatINR, formatGrams } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import LockInModal from '../components/shared/LockInModal';
 
 export default function SilverPage() {
   const [amount, setAmount] = useState('');
@@ -11,7 +12,9 @@ export default function SilverPage() {
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('UPI');
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [silverBalance, setSilverBalance] = useState(0);
+  const [showLockIn, setShowLockIn] = useState(false);
 
   useEffect(() => {
     api.get('/silver/rate.php').then(r => setRate(r.data.data.current_rate));
@@ -41,6 +44,7 @@ export default function SilverPage() {
           toast.success(`Successfully acquired ${formatGrams(res.data.data.silver_grams)} silver!`);
           setAmount('');
           setSilverBalance(prev => prev + res.data.data.silver_grams);
+          setShowLockIn(true);
         } else {
           toast.error(res.data.message);
         }
@@ -82,6 +86,7 @@ export default function SilverPage() {
               toast.success(`Successfully acquired ${formatGrams(res.data.data.silver_grams)} silver!`);
               setAmount('');
               setSilverBalance(prev => prev + res.data.data.silver_grams);
+              setShowLockIn(true);
             } else {
               toast.error(res.data.message);
             }
@@ -204,6 +209,15 @@ export default function SilverPage() {
           </div>
         </div>
       </div>
+      <LockInModal 
+        isOpen={showLockIn}
+        onClose={() => setShowLockIn(false)}
+        title="Increase Your Returns with Lock-In Investment"
+        message="If you want, you can get additional returns by locking your silver for a specific period."
+        primaryActionText="Lock Now"
+        secondaryActionText="Skip & Continue"
+        onSecondaryAction={() => navigate('/wallet')}
+      />
     </div>
   );
 }

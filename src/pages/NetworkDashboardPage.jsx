@@ -26,24 +26,33 @@ export default function NetworkDashboardPage() {
     ]
   });
 
-  // Attempt to fetch real data from API if available, otherwise use default mock data for UI demo
   useEffect(() => {
     const fetchNetwork = async () => {
       try {
-        const res = await api.get('/user/referral_stats.php');
-        if (res.data?.success && res.data?.data) {
-          const apiData = res.data.data;
+        const [networkRes, profileRes] = await Promise.all([
+          api.get('/user/referral_stats.php').catch(() => null),
+          api.get('/user/profile.php').catch(() => null)
+        ]);
+
+        if (networkRes?.data?.success && networkRes.data?.data) {
+          const apiData = networkRes.data.data;
           setNetworkData(prev => ({ 
             ...prev,
             totalReferrals: apiData.total_referrals,
-            referralIncome: apiData.total_silver_bonus, // Show Silver bonus here
+            referralIncome: apiData.total_silver_bonus,
             directReferrals: apiData.referred_users.map((u, i) => ({
               id: i, name: u.name, level: 1, business: 0, status: 'Active', joined: new Date(u.created_at).toLocaleDateString()
             }))
           }));
         }
+
+        if (profileRes?.data?.success && profileRes.data?.data) {
+          setNetworkData(prev => ({
+            ...prev,
+            referralCode: profileRes.data.data.mobile || prev.referralCode
+          }));
+        }
       } catch (e) {
-        // Fallback to mock data for presentation
         console.log("Using mock data for Network Dashboard presentation");
       } finally {
         setTimeout(() => setLoading(false), 800);
@@ -100,9 +109,9 @@ export default function NetworkDashboardPage() {
         <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 blur-[80px] rounded-full transition-opacity opacity-50 group-hover:opacity-100"></div>
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex-1">
-            <h3 className="text-xl font-bold text-white mb-2">Invite Friends & Earn</h3>
+            <h3 className="text-xl font-bold text-white mb-2">Invite Friends & Earn 500 JC</h3>
             <p className="text-gray-400 text-sm max-w-lg leading-relaxed">
-              Share your referral code and earn lifetime rewards. You get up to <span className="text-yellow-500 font-bold">1 JC</span> per transaction made by your direct network, down to 3 levels deep!
+              Share your referral code! When your friend signs up, they get <span className="text-yellow-500 font-bold">50 JC</span>. When they purchase ₹1000 of Gold or Silver, you get <span className="text-yellow-500 font-bold">500 JC</span> coins!
             </p>
           </div>
           <div className="flex items-center gap-3 bg-[#111] p-2 pr-2 pl-6 rounded-2xl border border-white/10 w-full md:w-auto">
@@ -122,7 +131,7 @@ export default function NetworkDashboardPage() {
       {/* Business Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard title="Total Earnings" amount={`JC ${networkData.totalEarnings}`} icon={Coins} color="from-yellow-400 to-yellow-600" />
-        <StatCard title="Referral Silver Bonus" amount={`${networkData.referralIncome}g`} icon={Users} color="from-blue-400 to-blue-600" />
+        <StatCard title="Referral JC Bonus" amount={`JC ${networkData.referralIncome}`} icon={Users} color="from-blue-400 to-blue-600" />
         <StatCard title="Holding Rewards" amount={`JC ${networkData.holdingReward}`} icon={Target} color="from-purple-400 to-purple-600" />
         <StatCard title="Total Team Business" amount={`₹ ${networkData.totalTeamBusiness.toLocaleString()}`} icon={TrendingUp} color="from-green-400 to-emerald-600" />
       </div>

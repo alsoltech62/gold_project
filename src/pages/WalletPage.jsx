@@ -126,7 +126,7 @@ export default function WalletPage() {
             </div>
             <div>
               <p className="text-white/40 text-xs font-bold uppercase tracking-widest mb-1">Japsan Wallet</p>
-              <p className="text-4xl font-black text-[#8A2BE2]">{formatINR(japsanBalance)}</p>
+              <p className="text-4xl font-black text-[#8A2BE2]">JC {japsanBalance}</p>
             </div>
           </div>
 

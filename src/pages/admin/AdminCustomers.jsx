@@ -215,6 +215,18 @@ export default function AdminCustomers() {
               <div className="grid grid-cols-2 gap-4">
                 <Field label="City" name="city" icon={MapPin} />
                 <Field label="State" name="state" icon={MapPin} />
+                <Field label="Pincode" name="pincode" icon={MapPin} />
+                <Field label="Address" name="address" icon={MapPin} />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="Aadhar Number" name="aadhar_number" icon={Users} />
+                <Field label="PAN Number" name="pan_number" icon={Users} />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="Bank Name" name="bank_name" icon={Wallet} />
+                <Field label="Account Holder" name="account_holder_name" icon={Users} />
+                <Field label="Account Number" name="account_number" icon={Wallet} />
+                <Field label="IFSC Code" name="ifsc_code" icon={Wallet} />
               </div>
               <button 
                 type="submit" 

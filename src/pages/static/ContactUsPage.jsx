@@ -38,7 +38,7 @@ export default function ContactUsPage() {
               <Mail className="text-amber-500 shrink-0" />
               <div>
                 <h3 className="text-white font-bold mb-1">Email Us</h3>
-                <p className="text-sm text-white/50">support@goldvault.com</p>
+                <p className="text-sm text-white/50">support@Gold Platform.com</p>
                 <p className="text-xs text-white/30 mt-1">We aim to reply within 24 hours</p>
               </div>
             </div>
@@ -47,7 +47,7 @@ export default function ContactUsPage() {
               <MapPin className="text-amber-500 shrink-0" />
               <div>
                 <h3 className="text-white font-bold mb-1">Head Office</h3>
-                <p className="text-sm text-white/50">GoldVault Towers, Sector V, Salt Lake</p>
+                <p className="text-sm text-white/50">Gold Platform Towers, Sector V, Salt Lake</p>
                 <p className="text-sm text-white/50">Kolkata, West Bengal 700091</p>
               </div>
             </div>

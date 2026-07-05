@@ -55,12 +55,17 @@ export default function AdminWithdrawals() {
           <tbody className="divide-y divide-white/5">
             {requests.map(req => (
               <tr key={req.id}>
-                <td className="p-4 text-sm text-white">ID: {req.user_id}</td>
+                <td className="p-4 text-sm text-white">
+                  <div>{req.user_name}</div>
+                  <div className="text-xs text-gray-400">{req.mobile}</div>
+                  <div className="text-[10px] text-white/30">ID: {req.user_id}</div>
+                </td>
                 <td className="p-4 text-sm font-bold text-amber-500">{formatINR(req.amount)}</td>
                 <td className="p-4 text-xs text-gray-400">
                   <p>Bank: {req.bank_name}</p>
                   <p>A/C: {req.account_number}</p>
                   <p>IFSC: {req.ifsc_code}</p>
+                  <p>Name: {req.account_holder_name}</p>
                 </td>
                 <td className="p-4">
                   <span className={`px-2 py-1 text-[10px] font-bold rounded uppercase ${req.status === 'pending' ? 'bg-yellow-500/20 text-yellow-500' : req.status === 'approved' ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'}`}>

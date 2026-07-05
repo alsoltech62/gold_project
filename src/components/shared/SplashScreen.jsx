@@ -273,7 +273,7 @@ export default function SplashScreen({ onComplete }) {
             <Link to="/terms" className="hover:text-[#D4AF37] transition-colors" onClick={() => onComplete()}>Terms of Service</Link>
             <Link to="/returns" className="hover:text-[#D4AF37] transition-colors" onClick={() => onComplete()}>Returns & Refunds</Link>
           </div>
-          <p className="text-[10px] text-white/20 mt-8 uppercase tracking-[0.3em]">© 2026 GoldVault Platform. All Rights Reserved.</p>
+          <p className="text-[10px] text-white/20 mt-8 uppercase tracking-[0.3em]">© 2026 Gold Platform Platform. All Rights Reserved.</p>
         </div>
       </div>
     </motion.div>

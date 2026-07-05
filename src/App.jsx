@@ -26,6 +26,7 @@ import AdminDeliveries from './pages/admin/AdminDeliveries';
 import AdminSupportTickets from './pages/admin/AdminSupportTickets';
 import AdminNotificationsPage from './pages/admin/AdminNotificationsPage';
 import AdminSettings from './pages/admin/AdminSettings';
+import AdminBanners from './pages/admin/AdminBanners';
 import AdminWithdrawals from './pages/admin/AdminWithdrawals';
 import SupportPage from './pages/SupportPage';
 import NotificationsPage from './pages/NotificationsPage';
@@ -122,6 +123,7 @@ function AppContent() {
           <Route path="withdrawals" element={<AdminWithdrawals />} />
           <Route path="support-tickets" element={<AdminSupportTickets />} />
           <Route path="notifications" element={<AdminNotificationsPage />} />
+          <Route path="banners" element={<AdminBanners />} />
           <Route path="settings" element={<AdminSettings />} />
         </Route>
         

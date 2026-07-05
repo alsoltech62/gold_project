@@ -103,7 +103,7 @@ export default function SignupPage() {
           className="text-center mb-8"
         >
           <h1 className="text-4xl font-black gold-text mb-2">Create Account</h1>
-          <p className="text-white/40">Join GoldVault and start saving in 24K Gold</p>
+          <p className="text-white/40">Join Gold Platform and start saving in 24K Gold</p>
         </motion.div>
 
         {/* Progress Bar */}

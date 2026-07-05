@@ -29,6 +29,7 @@ const adminNav = [
   { to: '/admin/withdrawals', icon: Wallet, label: 'Withdrawals' },
   { to: '/admin/support-tickets', icon: Ticket, label: 'Support Tickets' },
   { to: '/admin/notifications', icon: Bell, label: 'Send Notification' },
+  { to: '/admin/banners', icon: Settings, label: 'Banners' },
   { to: '/admin/settings', icon: Settings, label: 'Settings' },
 ];
 

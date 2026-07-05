@@ -10,6 +10,7 @@ import {
   Sparkles,
   Globe
 } from 'lucide-react';
+import logo from '../assets/logo.png';
 
 export default function WelcomePage() {
   const navigate = useNavigate();
@@ -53,8 +54,8 @@ export default function WelcomePage() {
           <div className="absolute -inset-1 bg-gradient-to-r from-[#BF953F] to-[#AA771C] rounded-[40px] blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
           <div className="relative glass p-10 md:p-14 rounded-[40px] flex flex-col items-center space-y-10 border-white/10 shadow-2xl">
             
-            <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-[#BF953F] via-[#FCF6BA] to-[#AA771C] shadow-[0_0_40px_rgba(212,175,55,0.4)] flex items-center justify-center">
-              <Shield size={48} className="text-black" />
+            <div className="w-24 h-24 rounded-full border-2 border-[#D4AF37]/50 bg-black flex items-center justify-center p-2 shadow-[0_0_40px_rgba(212,175,55,0.4)]">
+              <img src={logo} alt="Logo" className="w-full h-full object-contain" />
             </div>
 
             <div className="w-full space-y-4">
@@ -107,7 +108,7 @@ export default function WelcomePage() {
             <Link to="/terms" className="hover:text-[#D4AF37] transition-colors">Terms of Service</Link>
             <Link to="/returns" className="hover:text-[#D4AF37] transition-colors">Returns & Refunds</Link>
           </div>
-          <p className="text-[10px] text-white/20 mt-8 uppercase tracking-[0.3em]">© 2026 GoldVault Platform. All Rights Reserved.</p>
+          <p className="text-[10px] text-white/20 mt-8 uppercase tracking-[0.3em]">© 2026 Gold Platform. All Rights Reserved.</p>
         </div>
       </div>
     </div>

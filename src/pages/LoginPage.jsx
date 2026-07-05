@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
 import { Shield, Smartphone, Key, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import logo from '../assets/logo.png';
 
 export default function LoginPage() {
   const [step, setStep] = useState('mobile');
@@ -87,13 +88,10 @@ export default function LoginPage() {
         >
           <motion.div
             whileHover={{ scale: 1.05, rotate: 0 }}
-            className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-[#BF953F] to-[#AA771C] shadow-[0_0_30px_rgba(212,175,55,0.3)] mb-6 transform rotate-12 transition-transform duration-500"
+            className="inline-flex items-center justify-center w-24 h-24 rounded-full border-2 border-[#D4AF37]/50 shadow-[0_0_30px_rgba(212,175,55,0.3)] mb-6 transition-transform duration-500 bg-black p-2"
           >
-            <Shield size={40} className="text-black" />
+            <img src={logo} alt="Logo" className="w-full h-full object-contain" />
           </motion.div>
-          <h1 className="text-4xl font-extrabold tracking-tight mb-2">
-            <span className="gold-text">GoldVault</span>
-          </h1>
           <p className="text-white/60 font-medium">The Gold Standard of Digital Savings</p>
         </motion.div>
 

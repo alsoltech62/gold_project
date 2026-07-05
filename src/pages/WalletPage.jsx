@@ -20,9 +20,25 @@ export default function WalletPage() {
   const [sipLoading, setSipLoading] = useState(false);
   const [sipHistory, setSipHistory] = useState(null);
 
+  const [bankDetails, setBankDetails] = useState(null);
+
   useEffect(() => {
     fetchDashboard();
+    fetchBankDetails();
   }, []);
+
+  const fetchBankDetails = () => {
+    api.get('/user/profile.php').then(r => {
+      if(r.data.success) {
+        setBankDetails({
+          bankName: r.data.data.bank_name,
+          accountNumber: r.data.data.account_number,
+          ifsc: r.data.data.ifsc_code,
+          holderName: r.data.data.account_holder_name
+        });
+      }
+    });
+  };
 
   const fetchDashboard = () => {
     api.get('/user/dashboard.php').then(r => {
@@ -115,12 +131,6 @@ export default function WalletPage() {
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <p className="text-white/40 text-xs font-bold uppercase tracking-widest">INR Wallet</p>
-                <button 
-                  onClick={() => setShowWithdrawModal(true)}
-                  className="bg-white/10 hover:bg-white/20 text-white text-[10px] px-2 py-1 rounded transition-colors"
-                >
-                  Withdraw
-                </button>
               </div>
               <p className="text-4xl font-black text-white">{formatINR(inrBalance)}</p>
             </div>
@@ -153,14 +163,31 @@ export default function WalletPage() {
                 </div>
               </div>
             </div>
-            <button 
-              type="submit" 
-              disabled={loading || !amount}
-              className="w-full bg-amber-500 text-black font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-amber-400 transition-colors"
-            >
-              {loading ? 'Processing...' : <><Wallet size={20} /> Deposit Funds</>}
-            </button>
-            <p className="text-[10px] text-white/30 text-center mt-2">Note: When wallet reaches ₹1,000, it auto-converts to Gold.</p>
+            <div className="flex gap-3 mt-2">
+              <button 
+                type="submit" 
+                disabled={loading || !amount}
+                className="flex-1 bg-amber-500 text-black font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 hover:bg-amber-400 transition-colors disabled:opacity-50"
+              >
+                {loading ? 'Processing...' : <><Wallet size={18} /> Deposit</>}
+              </button>
+              <button 
+                type="button" 
+                onClick={() => setShowWithdrawModal(true)}
+                className="flex-1 bg-white/10 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 hover:bg-white/20 transition-colors"
+              >
+                Withdraw
+              </button>
+            </div>
+            
+            <div className="bg-black/40 p-4 rounded-xl border border-white/5 mt-4 space-y-3">
+              <p className="text-[11px] leading-relaxed text-white/70">
+                <span className="font-bold text-amber-500">Deposit:</span> Add funds to your wallet. When your INR balance reaches ₹1,000, it automatically converts into Digital Gold to secure your savings.
+              </p>
+              <p className="text-[11px] leading-relaxed text-white/70">
+                <span className="font-bold text-blue-400">Withdraw:</span> Transfer your available INR balance directly to your registered bank account.
+              </p>
+            </div>
           </form>
         </div>
 
@@ -274,12 +301,25 @@ export default function WalletPage() {
                   />
                 </div>
               </div>
-              <p className="text-[10px] text-white/40 text-center">
-                Please ensure your bank details are updated in your Profile before withdrawing.
-              </p>
+
+              {/* Show Bank Details if they exist */}
+              <div className="bg-white/5 p-4 rounded-xl border border-white/10 text-xs">
+                <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-2">Withdraw to Bank</p>
+                {bankDetails && bankDetails.bankName && bankDetails.accountNumber ? (
+                  <div className="text-white space-y-1">
+                    <p><span className="text-white/40">Bank:</span> {bankDetails.bankName}</p>
+                    <p><span className="text-white/40">A/C:</span> {bankDetails.accountNumber}</p>
+                    <p><span className="text-white/40">IFSC:</span> {bankDetails.ifsc}</p>
+                    <p><span className="text-white/40">Name:</span> {bankDetails.holderName}</p>
+                  </div>
+                ) : (
+                  <p className="text-red-400">Please update your bank details in the Profile section before withdrawing.</p>
+                )}
+              </div>
+
               <div className="grid grid-cols-2 gap-4 pt-2">
                 <button type="button" onClick={() => setShowWithdrawModal(false)} className="py-3 rounded-xl border border-white/10 text-white hover:bg-white/5 transition-all font-bold">Cancel</button>
-                <button type="submit" disabled={withdrawLoading || !withdrawAmount} className="py-3 rounded-xl bg-amber-500 text-black font-bold hover:bg-amber-400 transition-all disabled:opacity-50">Confirm</button>
+                <button type="submit" disabled={withdrawLoading || !withdrawAmount || !bankDetails?.accountNumber} className="py-3 rounded-xl bg-amber-500 text-black font-bold hover:bg-amber-400 transition-all disabled:opacity-50">Confirm</button>
               </div>
             </form>
           </div>

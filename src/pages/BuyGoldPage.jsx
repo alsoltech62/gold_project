@@ -63,7 +63,7 @@ export default function BuyGoldPage() {
         key: key,
         amount: parseFloat(amount) * 100,
         currency: 'INR',
-        name: 'GoldVault',
+        name: 'Gold Platform',
         description: `Purchase of ${grams.toFixed(4)}g 24K Gold`,
         image: 'https://cdn-icons-png.flaticon.com/512/2489/2489753.png',
         order_id: order_id,

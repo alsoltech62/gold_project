@@ -12,8 +12,23 @@ export default function LoginPage() {
   const [mobile, setMobile] = useState('');
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resendTimer, setResendTimer] = useState(30);
+  const [canResend, setCanResend] = useState(false);
+  const [isResending, setIsResending] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  React.useEffect(() => {
+    let timer;
+    if (step === 'otp' && resendTimer > 0) {
+      timer = setInterval(() => {
+        setResendTimer(prev => prev - 1);
+      }, 1000);
+    } else if (resendTimer <= 0) {
+      setCanResend(true);
+    }
+    return () => clearInterval(timer);
+  }, [step, resendTimer]);
 
   const sendOTP = async e => {
     e.preventDefault();
@@ -34,6 +49,8 @@ export default function LoginPage() {
           });
         }
         setStep('otp');
+        setResendTimer(30);
+        setCanResend(false);
       } else {
         toast.error(res.data.message);
       }
@@ -218,6 +235,45 @@ export default function LoginPage() {
                       ? <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin mx-auto" />
                       : 'Verify & Login'}
                   </button>
+
+                  <div className="flex justify-center mt-2">
+                    {isResending ? (
+                      <div className="w-4 h-4 border-2 border-[#D4AF37]/30 border-t-[#D4AF37] rounded-full animate-spin" />
+                    ) : (
+                      <button 
+                        type="button" 
+                        onClick={async () => {
+                          if (!canResend) return;
+                          setIsResending(true);
+                          try {
+                            const res = await api.post('/auth/send_otp.php', { mobile });
+                            if (res.data.success) {
+                              toast.success('OTP resent successfully!');
+                              if (res.data.dev_otp) {
+                                toast(`Developer Mode: Use OTP ${res.data.dev_otp}`, {
+                                  icon: '🔑',
+                                  duration: 6000,
+                                  style: { border: '1px solid #D4AF37', background: '#1A1A1A', color: '#FFF' }
+                                });
+                              }
+                              setResendTimer(30);
+                              setCanResend(false);
+                            } else {
+                              toast.error(res.data.message);
+                            }
+                          } catch (err) {
+                            toast.error('Failed to resend OTP.');
+                          }
+                          setIsResending(false);
+                        }}
+                        disabled={!canResend}
+                        className="text-xs font-bold transition-colors"
+                        style={{ color: canResend ? '#D4AF37' : 'rgba(255,255,255,0.3)' }}
+                      >
+                        {canResend ? 'Resend OTP' : `Resend OTP in ${resendTimer}s`}
+                      </button>
+                    )}
+                  </div>
 
                   <button type="button" onClick={() => setStep('mobile')}
                     className="w-full text-sm font-semibold transition-colors py-1"

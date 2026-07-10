@@ -25,7 +25,7 @@ export default function SipPage() {
           }
         }
       })
-      .catch(() => {});
+      .catch(() => { });
 
     api.get('/user/sip_history.php')
       .then(r => {
@@ -33,7 +33,7 @@ export default function SipPage() {
           setSipHistory(r.data.data);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   const handleSetupSip = async (e) => {
@@ -73,7 +73,7 @@ export default function SipPage() {
         <div className="lg:col-span-2 space-y-6">
           <div className="card-premium border-white/5 p-8 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-green-500/5 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none"></div>
-            
+
             <form onSubmit={handleSetupSip} className="relative z-10 space-y-8">
               <div className="space-y-4">
                 <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">SIP Installment Amount</label>
@@ -88,7 +88,7 @@ export default function SipPage() {
                     className="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-6 py-6 text-4xl font-black text-white focus:outline-none focus:border-green-500 focus:bg-white/[0.08] transition-all"
                   />
                 </div>
-                
+
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
                   {plans.map((plan) => (
                     <div
@@ -98,11 +98,10 @@ export default function SipPage() {
                         setAmount(plan.min_amount.toString());
                         setFrequency(plan.frequency);
                       }}
-                      className={`cursor-pointer p-4 rounded-xl border transition-all ${
-                        selectedPlan?.id === plan.id 
-                          ? 'bg-green-500/10 border-green-500/50 text-green-400' 
+                      className={`cursor-pointer p-4 rounded-xl border transition-all ${selectedPlan?.id === plan.id
+                          ? 'bg-green-500/10 border-green-500/50 text-green-400'
                           : 'bg-white/5 border-white/5 text-white/60 hover:border-green-500/30'
-                      }`}
+                        }`}
                     >
                       <p className="font-bold text-sm text-white">{plan.plan_name}</p>
                       <p className="text-[10px] uppercase tracking-widest mt-1 opacity-60">Min: ₹{plan.min_amount}</p>
@@ -118,21 +117,21 @@ export default function SipPage() {
                       {frequency}
                     </div>
                   </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Deduction Date</label>
-                  <select 
-                    value={date}
-                    onChange={e => setDate(e.target.value)}
-                    className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-4 text-sm font-bold text-white focus:outline-none focus:border-green-500"
-                  >
-                    <option value="1">1st of the month</option>
-                    <option value="5">5th of the month</option>
-                    <option value="10">10th of the month</option>
-                    <option value="15">15th of the month</option>
-                  </select>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Deduction Date</label>
+                    <select
+                      value={date}
+                      onChange={e => setDate(e.target.value)}
+                      className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-4 text-sm font-bold text-white focus:outline-none focus:border-green-500"
+                    >
+                      <option value="1">1st of the month</option>
+                      <option value="5">5th of the month</option>
+                      <option value="10">10th of the month</option>
+                      <option value="15">15th of the month</option>
+                    </select>
+                  </div>
                 </div>
               </div>
-            </div>
 
               <div className="bg-green-500/10 border border-green-500/20 rounded-2xl p-6 flex items-start gap-4">
                 <div className="mt-1">
@@ -161,7 +160,7 @@ export default function SipPage() {
         <div className="space-y-6">
           <div className="card-premium border-green-500/20 bg-gradient-to-br from-green-500/10 to-transparent p-6">
             <h3 className="text-white font-bold uppercase tracking-widest text-xs mb-6">Why SIP in Gold?</h3>
-            
+
             <ul className="space-y-4">
               <li className="flex items-start gap-3">
                 <CheckCircle2 className="text-green-400 shrink-0 mt-0.5" size={16} />
@@ -186,7 +185,7 @@ export default function SipPage() {
               </li>
             </ul>
           </div>
-          
+
           {sipHistory && (
             <div className="card-premium border-white/5 p-6 bg-[#0F0F0F]">
               <h3 className="text-white font-bold mb-4">SIP Installment Monitoring</h3>

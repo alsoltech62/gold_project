@@ -64,7 +64,7 @@ function AppContent() {
       <Toaster position="top-right" toastOptions={{
         style: { background: '#1a1a1a', color: '#f5f5f5', border: '1px solid #d97706' }
       }} />
-      
+
       <AnimatePresence>
         {showSplash && (
           <SplashScreen key="splash" onComplete={() => setShowSplash(false)} />
@@ -75,7 +75,7 @@ function AppContent() {
         <Route path="/welcome" element={<WelcomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
-        
+
         <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />
@@ -103,7 +103,7 @@ function AppContent() {
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/returns" element={<ReturnsPolicyPage />} />
         </Route>
-        
+
         <Route path="/admin" element={<AdminRoute><Layout isAdmin /></AdminRoute>}>
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboard />} />
@@ -119,7 +119,7 @@ function AppContent() {
           <Route path="banners" element={<AdminBanners />} />
           <Route path="settings" element={<AdminSettings />} />
         </Route>
-        
+
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </>

@@ -1,245 +1,386 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { RefreshCw, Bell, TrendingUp, Wallet, ArrowDownToLine, ShoppingCart, Truck, ChevronLeft, ChevronRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { RefreshCw, TrendingUp, TrendingDown, Wallet, ShoppingCart, ArrowDownToLine, Truck, Activity, ArrowUpRight, Sparkles, Zap } from 'lucide-react';
 import api, { formatINR, formatGrams } from '../utils/api';
 import { format } from 'date-fns';
-import logo1 from '../assets/logo1.png';
+
+function AnimatedNumber({ value, prefix = '', suffix = '' }) {
+  const [display, setDisplay] = useState(0);
+  const target = parseFloat(value) || 0;
+  const ref = useRef(null);
+
+  useEffect(() => {
+    let start = 0;
+    const duration = 1200;
+    const step = (timestamp) => {
+      if (!ref.current) { ref.current = timestamp; }
+      const progress = Math.min((timestamp - ref.current) / duration, 1);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      setDisplay(start + (target - start) * ease);
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    ref.current = null;
+    requestAnimationFrame(step);
+  }, [target]);
+
+  return <span>{prefix}{typeof display === 'number' ? display.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : display}{suffix}</span>;
+}
+
+const particlesData = [
+  { size: 3, left: '10%', color: '#D4AF37', duration: '9s', delay: '0s' },
+  { size: 2, left: '25%', color: '#F5C518', duration: '12s', delay: '2s' },
+  { size: 4, left: '50%', color: '#BF953F', duration: '7s', delay: '1s' },
+  { size: 2, left: '70%', color: '#D4AF37', duration: '11s', delay: '3s' },
+  { size: 3, left: '85%', color: '#F5C518', duration: '8s', delay: '0.5s' },
+];
 
 export default function DashboardPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [currentBannerIdx, setCurrentBannerIdx] = useState(0);
+  const [activeBanner, setActiveBanner] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const getImageUrl = (path) => {
-    if (!path) return '';
-    if (path.startsWith('http')) return path;
-    const baseUrl = api.defaults.baseURL.replace('/api', '');
-    return `${baseUrl}/${path}`;
+  const fetchDashboard = () => {
+    setRefreshing(true);
+    api.get('/user/dashboard.php')
+      .then(r => { setData(r.data.data); setLoading(false); setRefreshing(false); })
+      .catch(() => { setLoading(false); setRefreshing(false); });
   };
+
+  useEffect(() => { fetchDashboard(); }, []);
 
   useEffect(() => {
     if (data?.banners?.length > 1) {
-      const interval = setInterval(() => {
-        setCurrentBannerIdx(prev => (prev + 1) % data.banners.length);
-      }, 5000);
-      return () => clearInterval(interval);
+      const iv = setInterval(() => setActiveBanner(p => (p + 1) % data.banners.length), 4000);
+      return () => clearInterval(iv);
     }
   }, [data?.banners]);
 
-  const fetchDashboard = () => {
-    api.get('/user/dashboard.php')
-      .then(r => { 
-        setData(r.data.data); 
-        setLoading(false); 
-      })
-      .catch(() => setLoading(false));
+  const pl = data?.profit_loss_inr ?? 0;
+  const plPct = data?.total_invested_inr > 0 ? ((pl / data.total_invested_inr) * 100).toFixed(2) : '0.00';
+  const goldRate = data?.gold_rate ?? 0;
+  const silverRate = data?.silver_rate ?? 0;
+  const getBannerUrl = url => url?.startsWith('http') ? url : `https://goldpay.odofast.in/${url}`;
+
+  const containerVariants = {
+    hidden: {},
+    show: { transition: { staggerChildren: 0.1 } }
+  };
+  const itemVariants = {
+    hidden: { opacity: 0, y: 24 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' } }
   };
 
-  useEffect(() => {
-    fetchDashboard();
-  }, []);
-
   if (loading) return (
-    <div className="space-y-8 animate-pulse max-w-xl mx-auto p-4">
-      <div className="h-20 bg-white/5 rounded-2xl w-full"></div>
-      <div className="h-40 bg-white/5 rounded-2xl w-full"></div>
-      <div className="grid grid-cols-2 gap-4">
-        {[...Array(4)].map((_, i) => <div key={i} className="h-24 bg-white/5 rounded-2xl" />)}
+    <div className="space-y-5 animate-pulse max-w-2xl mx-auto">
+      <div className="h-12 rounded-2xl" style={{ background: 'rgba(255,255,255,0.04)' }} />
+      <div className="h-52 rounded-[28px]" style={{ background: 'rgba(255,255,255,0.04)' }} />
+      <div className="h-44 rounded-[28px]" style={{ background: 'rgba(255,255,255,0.04)' }} />
+      <div className="flex gap-4">
+        <div className="h-36 flex-1 rounded-[24px]" style={{ background: 'rgba(255,255,255,0.04)' }} />
+        <div className="h-36 flex-1 rounded-[24px]" style={{ background: 'rgba(255,255,255,0.04)' }} />
       </div>
-      <div className="h-32 bg-white/5 rounded-2xl w-full"></div>
     </div>
   );
 
-  const pl = data?.profit_loss_inr ?? 0;
-  const plPercentage = data?.total_invested_inr > 0 ? ((pl / data.total_invested_inr) * 100).toFixed(2) : 0;
-
   return (
-    <div className="space-y-6 lg:space-y-8 max-w-6xl mx-auto pb-24 px-4 pt-4 lg:pt-8 font-sans">
-      
-      {/* Top Section: Portfolio & Rates */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-        
-        {/* Main Portfolio Card */}
-        <div className="lg:col-span-2 relative overflow-hidden rounded-[2rem] p-6 lg:p-10 bg-gradient-to-br from-[#161616] to-[#0a0a0a] border border-[#D4AF37]/20 shadow-[0_8px_30px_rgba(212,175,55,0.1)] group">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-[#D4AF37]/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#D4AF37]/5 rounded-full blur-3xl -ml-10 -mb-10 pointer-events-none"></div>
-          
-          <div className="flex justify-between items-start mb-6 lg:mb-10 relative z-10">
-            <div>
-              <p className="text-[#D4AF37] uppercase font-bold tracking-[0.25em] text-[10px] lg:text-xs mb-2 lg:mb-3 opacity-80">Total Portfolio Value</p>
-              <h1 className="text-white font-black text-4xl sm:text-5xl lg:text-6xl tracking-tight drop-shadow-lg">₹ {formatINR(data?.current_value_inr)}</h1>
-            </div>
-            <div className="w-12 h-12 lg:w-16 lg:h-16 rounded-2xl bg-gradient-to-br from-[#D4AF37]/20 to-transparent border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] shadow-inner group-hover:scale-105 transition-transform duration-500">
-              <Wallet className="w-6 h-6 lg:w-8 lg:h-8" />
-            </div>
-          </div>
-          
-          <div className="flex flex-wrap gap-4 relative z-10">
-            <div className={`inline-flex items-center gap-2 px-4 py-2 lg:px-5 lg:py-2.5 rounded-full text-xs lg:text-sm font-bold border backdrop-blur-md ${pl >= 0 ? 'border-green-500/30 text-green-400 bg-green-500/10 shadow-[0_0_15px_rgba(34,197,94,0.1)]' : 'border-red-500/30 text-red-400 bg-red-500/10 shadow-[0_0_15px_rgba(239,68,68,0.1)]'}`}>
-              <TrendingUp className={`w-4 h-4 lg:w-5 lg:h-5 ${pl < 0 ? "rotate-180" : ""}`} /> 
-              Today's {pl >= 0 ? 'Profit' : 'Loss'}: ₹ {formatINR(Math.abs(pl))} ({plPercentage}%)
-            </div>
-          </div>
-        </div>
+    <motion.div variants={containerVariants} initial="hidden" animate="show" className="space-y-5 pb-16">
 
-        {/* Live Rates Card */}
-        <div className="relative overflow-hidden rounded-[2rem] p-6 lg:p-8 bg-gradient-to-br from-[#161616] to-[#0a0a0a] border border-white/5 shadow-xl flex flex-col justify-center gap-6 group">
-          <div className="flex justify-between items-center w-full">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-              <p className="text-white/50 uppercase font-bold tracking-[0.2em] text-[10px] lg:text-xs">Live Market</p>
-            </div>
-            <button onClick={fetchDashboard} className="text-white/30 hover:text-[#D4AF37] transition-colors p-2 hover:bg-white/5 rounded-full active:rotate-180 duration-500">
-              <RefreshCw className="w-4 h-4 lg:w-5 lg:h-5" />
-            </button>
+      {/* ── TICKER BAR ── */}
+      <motion.div variants={itemVariants}
+        className="rounded-2xl overflow-hidden relative"
+        style={{ background: 'rgba(12,12,18,0.9)', border: '1px solid rgba(212,175,55,0.12)' }}>
+        <div className="flex items-center">
+          <div className="flex-shrink-0 px-4 py-3 flex items-center gap-2 border-r" style={{ borderColor: 'rgba(212,175,55,0.15)', background: 'rgba(212,175,55,0.06)' }}>
+            <div className="live-dot" style={{ width: 7, height: 7 }} />
+            <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#D4AF37' }}>Live</span>
           </div>
-          
-          <div className="flex items-center justify-between border-b border-white/5 pb-5">
-            <div className="flex items-center gap-4">
-              <div className="text-3xl lg:text-4xl drop-shadow-[0_0_10px_rgba(212,175,55,0.4)] group-hover:scale-110 transition-transform duration-300">🥇</div>
-              <div>
-                <p className="text-white/40 text-[9px] lg:text-[10px] uppercase tracking-widest mb-1 font-bold">24K Gold / gm</p>
-                <p className="text-[#D4AF37] font-black text-xl lg:text-2xl tracking-wide">₹{formatINR(data?.gold_rate)}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between pt-1">
-            <div className="flex items-center gap-4">
-              <div className="text-3xl lg:text-4xl drop-shadow-[0_0_10px_rgba(200,200,200,0.4)] group-hover:scale-110 transition-transform duration-300">🥈</div>
-              <div>
-                <p className="text-white/40 text-[9px] lg:text-[10px] uppercase tracking-widest mb-1 font-bold">999 Silver / gm</p>
-                <p className="text-gray-200 font-black text-xl lg:text-2xl tracking-wide">₹{formatINR(data?.silver_rate)}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Action Buttons */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-        <Link to="/buy" className="p-3 lg:p-4 rounded-xl lg:rounded-2xl bg-gradient-to-r from-[#FFDF73] via-[#D4AF37] to-[#B8860B] text-black shadow-[0_4px_15px_rgba(212,175,55,0.2)] hover:shadow-[0_8px_25px_rgba(212,175,55,0.4)] hover:-translate-y-1 transition-all flex items-center justify-center gap-2 font-black tracking-[0.15em] text-[10px] lg:text-xs">BUY GOLD</Link>
-        <Link to="/sell?metal=gold" className="p-3 lg:p-4 rounded-xl lg:rounded-2xl bg-[#111] border border-[#D4AF37]/30 text-[#D4AF37] shadow-lg hover:shadow-[0_8px_25px_rgba(212,175,55,0.15)] hover:-translate-y-1 hover:bg-[#D4AF37]/5 transition-all flex items-center justify-center gap-2 font-black tracking-[0.15em] text-[10px] lg:text-xs">SELL GOLD</Link>
-        <Link to="/silver" className="p-3 lg:p-4 rounded-xl lg:rounded-2xl bg-gradient-to-r from-[#E0E0E0] via-[#BDBDBD] to-[#9E9E9E] text-black shadow-[0_4px_15px_rgba(255,255,255,0.1)] hover:shadow-[0_8px_25px_rgba(255,255,255,0.2)] hover:-translate-y-1 transition-all flex items-center justify-center gap-2 font-black tracking-[0.15em] text-[10px] lg:text-xs">BUY SILVER</Link>
-        <Link to="/sell?metal=silver" className="p-3 lg:p-4 rounded-xl lg:rounded-2xl bg-[#111] border border-white/20 text-white/90 shadow-lg hover:shadow-[0_8px_25px_rgba(255,255,255,0.1)] hover:-translate-y-1 hover:bg-white/5 transition-all flex items-center justify-center gap-2 font-black tracking-[0.15em] text-[10px] lg:text-xs">SELL SILVER</Link>
-      </div>
-
-      {/* Banner & Vault Section (Same Row on Desktop) */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-6">
-        
-        {/* Banner Carousel (75% Width) */}
-        <div className="lg:col-span-3 h-full">
-          {data?.banners?.length > 0 ? (
-            <div className="w-full h-full min-h-[160px] sm:min-h-[224px] lg:min-h-[320px] relative rounded-2xl lg:rounded-3xl overflow-hidden border border-[#D4AF37]/20 bg-[#050505] shadow-2xl group">
-              {data.banners.map((banner, idx) => (
-                <img 
-                  key={banner.id} 
-                  src={getImageUrl(banner.image_url)} 
-                  alt="Banner" 
-                  className={`absolute inset-0 w-full h-full object-contain p-2 lg:p-4 transition-opacity duration-1000 ${currentBannerIdx === idx ? 'opacity-100' : 'opacity-0'}`} 
-                />
-              ))}
-              {data.banners.length > 1 && (
-                <>
-                  <button onClick={() => setCurrentBannerIdx((prev) => (prev - 1 + data.banners.length) % data.banners.length)} className="absolute left-2 lg:left-4 top-1/2 -translate-y-1/2 z-30 p-1.5 lg:p-2 rounded-full bg-black/80 text-white/70 hover:text-white border border-white/10 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all hover:scale-110">
-                    <ChevronLeft size={16} className="lg:w-5 lg:h-5" />
-                  </button>
-                  <button onClick={() => setCurrentBannerIdx((prev) => (prev + 1) % data.banners.length)} className="absolute right-2 lg:right-4 top-1/2 -translate-y-1/2 z-30 p-1.5 lg:p-2 rounded-full bg-black/80 text-white/70 hover:text-white border border-white/10 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all hover:scale-110">
-                    <ChevronRight size={16} className="lg:w-5 lg:h-5" />
-                  </button>
-                  <div className="absolute bottom-2 lg:bottom-4 left-1/2 -translate-x-1/2 z-30 flex gap-1.5 lg:gap-2">
-                    {data.banners.map((_, idx) => (
-                      <div key={idx} onClick={() => setCurrentBannerIdx(idx)} className={`h-1.5 lg:h-2 rounded-full cursor-pointer transition-all duration-300 ${currentBannerIdx === idx ? 'w-5 lg:w-8 bg-[#D4AF37] shadow-[0_0_8px_rgba(212,175,55,0.8)]' : 'w-1.5 lg:w-2.5 bg-white/30 hover:bg-white/60'}`}></div>
-                    ))}
+          <div className="ticker-wrap flex-1">
+            <div className="ticker-track py-3">
+              {[1, 2].map(n => (
+                <div key={n} className="flex items-center gap-8 flex-shrink-0">
+                  <div className="flex items-center gap-2 text-xs font-semibold">
+                    <span className="w-2 h-2 rounded-full" style={{ background: '#D4AF37' }} />
+                    <span style={{ color: '#D4AF37' }}>GOLD</span>
+                    <span className="text-white font-bold">₹{formatINR(goldRate)}<span style={{ color: 'rgba(255,255,255,0.4)', fontWeight: 400 }}>/gm</span></span>
+                    <span className="text-green-400 text-[10px]">▲ 0.12%</span>
                   </div>
-                </>
-              )}
+                  <div className="w-px h-4" style={{ background: 'rgba(255,255,255,0.1)' }} />
+                  <div className="flex items-center gap-2 text-xs font-semibold">
+                    <span className="w-2 h-2 rounded-full" style={{ background: '#94a3b8' }} />
+                    <span style={{ color: '#94a3b8' }}>SILVER</span>
+                    <span className="text-white font-bold">₹{formatINR(silverRate)}<span style={{ color: 'rgba(255,255,255,0.4)', fontWeight: 400 }}>/gm</span></span>
+                    <span className="text-red-400 text-[10px]">▼ 0.05%</span>
+                  </div>
+                  <div className="w-px h-4" style={{ background: 'rgba(255,255,255,0.1)' }} />
+                </div>
+              ))}
             </div>
-          ) : (
-            <div className="w-full h-full min-h-[160px] sm:min-h-[224px] lg:min-h-[320px] rounded-2xl lg:rounded-3xl border border-white/5 bg-[#050505] flex items-center justify-center shadow-2xl">
-              <p className="text-white/20 text-xs lg:text-sm tracking-widest uppercase font-bold">No Active Banner</p>
+          </div>
+          <button onClick={fetchDashboard} className="flex-shrink-0 px-4 transition-all"
+            style={{ color: 'rgba(212,175,55,0.6)' }}>
+            <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
+          </button>
+        </div>
+      </motion.div>
+
+      {/* MAIN GRID: left content + right portfolio */}
+      <div className="grid grid-cols-1 xl:grid-cols-5 gap-5">
+
+        {/* LEFT COLUMN (3/5 on xl) */}
+        <div className="xl:col-span-3 space-y-5">
+
+      {/* ── BANNER CAROUSEL ── */}
+      {data?.banners?.length > 0 && (
+        <motion.div variants={itemVariants}
+          className="relative w-full overflow-hidden rounded-[24px] shadow-2xl"
+          style={{ aspectRatio: '16/7', border: '1px solid rgba(255,255,255,0.06)' }}>
+          <AnimatePresence mode="wait">
+            <motion.img
+              key={activeBanner}
+              src={getBannerUrl(data.banners[activeBanner].image_url)}
+              alt="Promo"
+              initial={{ opacity: 0, scale: 1.05 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.97 }}
+              transition={{ duration: 0.6 }}
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          </AnimatePresence>
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(2,2,4,0.6) 0%, transparent 60%)' }} />
+          {data.banners.length > 1 && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+              {data.banners.map((_, i) => (
+                <button key={i} onClick={() => setActiveBanner(i)}
+                  className="rounded-full transition-all duration-400"
+                  style={{ width: activeBanner === i ? 20 : 6, height: 6, background: activeBanner === i ? '#D4AF37' : 'rgba(255,255,255,0.35)' }} />
+              ))}
             </div>
           )}
-        </div>
+        </motion.div>
+      )}
 
-        {/* Vault Holdings (25% Width - 4 Cards) */}
-        <div className="lg:col-span-1 flex flex-col h-full mt-2 lg:mt-0">
-          <h3 className="text-[#D4AF37] font-bold text-[10px] lg:text-xs uppercase tracking-[0.25em] mb-3 lg:mb-4 px-1 flex items-center gap-2">
-            <span className="w-1 h-3 lg:h-4 bg-[#D4AF37] rounded-full"></span>
-            Your Vault
-          </h3>
-          <div className="grid grid-cols-2 lg:grid-cols-2 gap-3 lg:gap-4 flex-1">
-            <div className="bg-[#111] border border-[#D4AF37]/10 rounded-xl lg:rounded-2xl p-3 flex flex-col items-center justify-center text-center hover:bg-[#151515] hover:border-[#D4AF37]/30 transition-all shadow-lg group">
-              <p className="text-[9px] text-white/50 uppercase tracking-[0.15em] mb-1.5 font-bold group-hover:text-[#D4AF37]/80 transition-colors">Gold Vault</p>
-              <p className="text-[#D4AF37] font-black text-sm lg:text-base">{formatGrams(data?.total_gold_grams)}<span className="text-[8px] font-medium text-white/40 ml-1">gm</span></p>
-            </div>
-            <div className="bg-[#111] border border-[#D4AF37]/10 rounded-xl lg:rounded-2xl p-3 flex flex-col items-center justify-center text-center hover:bg-[#151515] hover:border-[#D4AF37]/30 transition-all shadow-lg group">
-              <p className="text-[9px] text-white/50 uppercase tracking-[0.15em] mb-1.5 font-bold group-hover:text-[#D4AF37]/80 transition-colors">Gold Value</p>
-              <p className="text-[#D4AF37] font-black text-sm lg:text-base">₹{formatINR(data?.gold_current_value)}</p>
-            </div>
-            <div className="bg-[#111] border border-white/5 rounded-xl lg:rounded-2xl p-3 flex flex-col items-center justify-center text-center hover:bg-[#151515] hover:border-white/20 transition-all shadow-lg group">
-              <p className="text-[9px] text-white/50 uppercase tracking-[0.15em] mb-1.5 font-bold group-hover:text-white/80 transition-colors">Silver Vault</p>
-              <p className="text-gray-200 font-black text-sm lg:text-base">{formatGrams(data?.total_silver_grams)}<span className="text-[8px] font-medium text-white/40 ml-1">gm</span></p>
-            </div>
-            <div className="bg-[#111] border border-white/5 rounded-xl lg:rounded-2xl p-3 flex flex-col items-center justify-center text-center hover:bg-[#151515] hover:border-white/20 transition-all shadow-lg group">
-              <p className="text-[9px] text-white/50 uppercase tracking-[0.15em] mb-1.5 font-bold group-hover:text-white/80 transition-colors">Silver Value</p>
-              <p className="text-gray-200 font-black text-sm lg:text-base">₹{formatINR(data?.silver_current_value)}</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* ── QUICK ACTIONS ── */}
+      <motion.div variants={itemVariants} className="grid grid-cols-4 gap-3">
+        {[
+          { to: '/buy', icon: ShoppingCart, label: 'Buy', color: '#4ade80', bg: 'rgba(74,222,128,0.08)', border: 'rgba(74,222,128,0.2)' },
+          { to: '/sell?metal=gold', icon: TrendingDown, label: 'Sell', color: '#f87171', bg: 'rgba(248,113,113,0.08)', border: 'rgba(248,113,113,0.2)' },
+          { to: '/wallet', icon: Wallet, label: 'SIP', color: '#818cf8', bg: 'rgba(129,140,248,0.08)', border: 'rgba(129,140,248,0.2)' },
+          { to: '/delivery', icon: Truck, label: 'Deliver', color: '#34d399', bg: 'rgba(52,211,153,0.08)', border: 'rgba(52,211,153,0.2)' },
+        ].map((item) => (
+          <motion.div key={item.label} whileHover={{ y: -3, scale: 1.02 }} whileTap={{ scale: 0.95 }}>
+            <Link to={item.to} className="flex flex-col items-center gap-2.5 p-4 rounded-2xl text-center transition-all block"
+              style={{ background: item.bg, border: `1px solid ${item.border}` }}>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+                style={{ background: `${item.color}20` }}>
+                <item.icon size={18} style={{ color: item.color }} />
+              </div>
+              <span className="text-xs font-bold" style={{ color: 'rgba(255,255,255,0.7)' }}>{item.label}</span>
+            </Link>
+          </motion.div>
+        ))}
+      </motion.div>
 
-      {/* Recent Transactions */}
-      <div className="pt-2">
-        <div className="flex justify-between items-center mb-4 lg:mb-6 px-1 lg:px-2">
-          <h3 className="text-[#D4AF37] font-bold text-[10px] lg:text-xs uppercase tracking-[0.25em] flex items-center gap-2">
-            <span className="w-1 h-4 bg-[#D4AF37] rounded-full"></span>
-            Recent Transactions
-          </h3>
-          <Link to="/transactions" className="text-white/40 hover:text-[#D4AF37] text-[9px] lg:text-[10px] uppercase font-bold tracking-widest flex items-center gap-1 transition-colors group">
-            View All <ChevronRight className="w-3 h-3 lg:w-4 lg:h-4 group-hover:translate-x-1 transition-transform"/>
+      {/* ── RECENT TRANSACTIONS ── */}
+      <motion.div variants={itemVariants}>
+        <div className="flex items-center justify-between mb-3">
+          <p className="section-label">Recent Activity</p>
+          <Link to="/transactions" className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider transition-colors"
+            style={{ color: '#D4AF37' }}>
+            See All <ArrowUpRight size={11} />
           </Link>
         </div>
-        <div className="flex gap-3 sm:gap-4 lg:gap-6 overflow-x-auto pb-6 snap-x hide-scrollbar px-1 lg:px-2">
-          {data?.recent_transactions?.map(t => (
-            <div key={t.id} className="min-w-[200px] lg:min-w-[320px] border border-white/5 rounded-2xl p-4 lg:p-6 bg-[#0f0f0f] hover:bg-[#161616] transition-all snap-start shrink-0 flex flex-col justify-between gap-4 lg:gap-6 shadow-xl hover:-translate-y-1">
-              <div className="flex flex-col gap-3 lg:gap-5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3 lg:gap-4">
-                    <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded-xl flex items-center justify-center bg-black border ${
-                      t.type === 'buy' ? 'border-green-500/20 text-green-400 shadow-[0_0_10px_rgba(34,197,94,0.1)]' : 
-                      t.type === 'sell' ? 'border-red-500/20 text-red-400 shadow-[0_0_10px_rgba(239,68,68,0.1)]' : 
-                      'border-[#D4AF37]/20 text-[#D4AF37] shadow-[0_0_10px_rgba(212,175,55,0.1)]'
-                    }`}>
-                      {t.type === 'buy' ? <ShoppingCart className="w-4 h-4 lg:w-5 lg:h-5"/> : t.type === 'sell' ? <ArrowDownToLine className="w-4 h-4 lg:w-5 lg:h-5"/> : <Truck className="w-4 h-4 lg:w-5 lg:h-5"/>}
-                    </div>
-                    <div>
-                      <p className="text-sm lg:text-base font-bold text-white capitalize tracking-wide">{t.type === 'delivery' ? 'Delivery' : `Gold ${t.type}`}</p>
-                      <p className="text-[10px] lg:text-xs text-white/40 mt-0.5 font-medium">{t.gold_grams ? formatGrams(t.gold_grams) : '-'} gm</p>
-                    </div>
+        <div className="rounded-[22px] overflow-hidden"
+          style={{ background: 'rgba(12,12,18,0.8)', border: '1px solid rgba(255,255,255,0.05)' }}>
+          {data?.recent_transactions?.length > 0 ? data.recent_transactions.map((t, i) => {
+            const isBuy = t.type === 'buy';
+            const isSell = t.type === 'sell';
+            const color = isBuy ? '#4ade80' : isSell ? '#f87171' : '#D4AF37';
+            const Icon = isBuy ? ShoppingCart : isSell ? ArrowDownToLine : Truck;
+            return (
+              <motion.div key={t.id}
+                initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.06 }}
+                className="flex items-center justify-between px-5 py-4"
+                style={{ borderBottom: i < data.recent_transactions.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                <div className="flex items-center gap-3.5">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ background: `${color}12`, border: `1px solid ${color}25` }}>
+                    <Icon size={17} style={{ color }} />
+                  </div>
+                  <div>
+                    <p className="text-white font-bold text-sm capitalize leading-none">
+                      {t.type === 'delivery' ? 'Delivery' : `${t.metal_type || 'Gold'} ${t.type}`}
+                    </p>
+                    <p className="text-[11px] mt-1" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                      {format(new Date(t.created_at), 'MMM dd • hh:mm a')}
+                    </p>
                   </div>
                 </div>
-                <div>
-                  <p className="text-lg lg:text-2xl text-white font-black tracking-wider">₹ {t.amount_inr ? formatINR(t.amount_inr) : '-'}</p>
-                  <p className="text-[9px] lg:text-[10px] text-white/30 mt-1 uppercase tracking-widest font-medium">{format(new Date(t.created_at), 'MMM dd, yyyy')}</p>
+                <div className="text-right">
+                  <p className="text-white font-bold text-sm">₹{formatINR(t.amount_inr)}</p>
+                  <span className={`text-[10px] font-bold uppercase tracking-wider ${t.status === 'completed' ? 'text-green-400' : 'text-yellow-400'}`}>
+                    {t.status}
+                  </span>
                 </div>
-              </div>
-              <div className="flex justify-start">
-                <div className={`px-3 py-1 lg:px-4 lg:py-1.5 rounded-md text-[9px] font-bold uppercase tracking-widest ${
-                  t.status === 'completed' ? 'text-green-400 bg-green-500/10' : 
-                  t.status === 'pending' ? 'text-yellow-400 bg-yellow-500/10' : 
-                  'text-blue-400 bg-blue-500/10'
-                }`}>
-                  {t.status}
-                </div>
-              </div>
+              </motion.div>
+            );
+          }) : (
+            <div className="py-14 text-center">
+              <div className="text-4xl mb-3 opacity-30">📊</div>
+              <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.25)' }}>No recent activity</p>
             </div>
-          ))}
-          {(!data?.recent_transactions || data.recent_transactions.length === 0) && (
-            <div className="w-full text-center py-12 lg:py-20 border border-white/5 rounded-2xl bg-[#0f0f0f] text-white/30 text-xs lg:text-sm font-bold uppercase tracking-[0.2em]">No recent transactions</div>
           )}
         </div>
-      </div>
-    </div>
+      </motion.div>
+
+        </div>{/* end left col */}
+
+        {/* RIGHT COLUMN (2/5 on xl) */}
+        <div className="xl:col-span-2 space-y-5">
+
+      {/* ── PORTFOLIO CARD ── */}
+      <motion.div variants={itemVariants} className="relative rounded-[28px] overflow-hidden p-7"
+        style={{ background: 'linear-gradient(135deg, #12100A 0%, #0C0A06 50%, #080806 100%)', border: '1px solid rgba(212,175,55,0.2)', boxShadow: '0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(212,175,55,0.1)' }}>
+
+        {/* Floating particles */}
+        {particlesData.map((p, i) => (
+          <div key={i} className="particle absolute" style={{
+            width: p.size, height: p.size, left: p.left, bottom: '20%',
+            background: p.color, '--duration': p.duration, '--delay': p.delay,
+            boxShadow: `0 0 6px ${p.color}`,
+          }} />
+        ))}
+
+        {/* Ambient glow */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-32 rounded-full opacity-10"
+            style={{ background: '#D4AF37', filter: 'blur(40px)', animation: 'glowBreath 4s ease-in-out infinite' }} />
+        </div>
+
+        {/* SVG Chart */}
+        <div className="absolute bottom-0 left-0 right-0 h-28 pointer-events-none opacity-30">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none" className="w-full h-full">
+            <defs>
+              <linearGradient id="cg" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stopColor="#D4AF37" stopOpacity="0" />
+                <stop offset="50%" stopColor="#F5C518" />
+                <stop offset="100%" stopColor="#D4AF37" stopOpacity="0" />
+              </linearGradient>
+              <linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#D4AF37" stopOpacity="0.6" />
+                <stop offset="100%" stopColor="#D4AF37" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            <path d="M0,70 Q60,50 100,60 T200,40 T300,55 T400,30" stroke="url(#cg)" strokeWidth="2" fill="none" strokeLinecap="round" />
+            <path d="M0,70 Q60,50 100,60 T200,40 T300,55 T400,30 L400,100 L0,100 Z" fill="url(#ag)" />
+          </svg>
+        </div>
+
+        {/* Content */}
+        <div className="relative z-10 text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-5"
+            style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(212,175,55,0.25)', backdropFilter: 'blur(10px)' }}>
+            <Wallet size={11} style={{ color: '#D4AF37' }} />
+            <span className="text-[10px] font-bold uppercase tracking-[0.15em]" style={{ color: '#D4AF37' }}>Total Portfolio</span>
+          </div>
+
+          <h2 className="font-black text-white mb-3" style={{ fontSize: '2.6rem', lineHeight: 1, letterSpacing: '-0.02em', textShadow: '0 0 40px rgba(212,175,55,0.2)' }}>
+            ₹<AnimatedNumber value={data?.current_value_inr ?? 0} />
+          </h2>
+
+          <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold ${pl >= 0 ? '' : ''}`}
+            style={{
+              background: pl >= 0 ? 'rgba(74,222,128,0.1)' : 'rgba(248,113,113,0.1)',
+              border: `1px solid ${pl >= 0 ? 'rgba(74,222,128,0.25)' : 'rgba(248,113,113,0.25)'}`,
+              color: pl >= 0 ? '#4ade80' : '#f87171'
+            }}>
+            {pl >= 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+            <span>{pl >= 0 ? '+' : '-'}₹{formatINR(Math.abs(pl))} ({plPct}%)</span>
+          </div>
+
+          <div className="flex items-center justify-center gap-6 mt-6 pt-5"
+            style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+            <div className="text-center">
+              <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.3)' }}>Invested</p>
+              <p className="text-white font-bold text-sm">₹{formatINR(data?.total_invested_inr)}</p>
+            </div>
+            <div className="h-8 w-px" style={{ background: 'rgba(255,255,255,0.07)' }} />
+            <div className="text-center">
+              <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.3)' }}>Gold</p>
+              <p className="font-bold text-sm" style={{ color: '#D4AF37' }}>{formatGrams(data?.total_gold_grams)}g</p>
+            </div>
+            <div className="h-8 w-px" style={{ background: 'rgba(255,255,255,0.07)' }} />
+            <div className="text-center">
+              <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.3)' }}>Silver</p>
+              <p className="font-bold text-sm" style={{ color: '#94a3b8' }}>{formatGrams(data?.total_silver_grams)}g</p>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* ── VAULT CARDS ── */}
+      <motion.div variants={itemVariants}>
+        <p className="section-label mb-3">Your Vault</p>
+
+
+        {/* Gold Card */}
+        <motion.div whileHover={{ y: -3 }} className="relative rounded-[22px] p-5 overflow-hidden"
+          style={{ background: 'linear-gradient(135deg, rgba(22,18,10,0.95), rgba(12,10,6,0.98))', border: '1px solid rgba(212,175,55,0.18)' }}>
+          <div className="absolute -right-4 -top-4 text-7xl opacity-[0.07]">🥇</div>
+          <div className="absolute inset-0 opacity-20" style={{ background: 'radial-gradient(circle at 80% 20%, rgba(212,175,55,0.5), transparent 60%)' }} />
+          <div className="relative z-10">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
+                style={{ background: 'rgba(212,175,55,0.12)', border: '1px solid rgba(212,175,55,0.25)' }}>🥇</div>
+              <div>
+                <p className="text-white font-bold text-sm">24K Gold</p>
+                <p className="text-xs font-semibold" style={{ color: '#D4AF37' }}>{formatGrams(data?.total_gold_grams)} gm</p>
+              </div>
+            </div>
+            <div className="divider-gold mb-3" />
+            <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>Current Value</p>
+            <p className="text-white font-bold text-xl mb-4">₹{formatINR(data?.gold_current_value)}</p>
+            <div className="flex gap-2">
+              <Link to="/buy" className="flex-1 py-2 rounded-xl text-xs font-bold text-center"
+                style={{ background: 'rgba(212,175,55,0.9)', color: '#000' }}>Buy Gold</Link>
+              <Link to="/sell?metal=gold" className="flex-1 py-2 rounded-xl text-xs font-bold text-center"
+                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)' }}>Sell</Link>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Silver Card */}
+        <motion.div whileHover={{ y: -3 }} className="relative rounded-[22px] p-5 overflow-hidden"
+          style={{ background: 'linear-gradient(135deg, rgba(16,18,22,0.95), rgba(10,12,16,0.98))', border: '1px solid rgba(148,163,184,0.18)' }}>
+          <div className="absolute -right-4 -top-4 text-7xl opacity-[0.07]">🥈</div>
+          <div className="absolute inset-0 opacity-20" style={{ background: 'radial-gradient(circle at 80% 20%, rgba(148,163,184,0.4), transparent 60%)' }} />
+          <div className="relative z-10">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
+                style={{ background: 'rgba(148,163,184,0.12)', border: '1px solid rgba(148,163,184,0.25)' }}>🥈</div>
+              <div>
+                <p className="text-white font-bold text-sm">999 Silver</p>
+                <p className="text-xs font-semibold" style={{ color: '#94a3b8' }}>{formatGrams(data?.total_silver_grams)} gm</p>
+              </div>
+            </div>
+            <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(148,163,184,0.3), transparent)', marginBottom: 12 }} />
+            <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>Current Value</p>
+            <p className="text-white font-bold text-xl mb-4">₹{formatINR(data?.silver_current_value)}</p>
+            <div className="flex gap-2">
+              <Link to="/silver" className="flex-1 py-2 rounded-xl text-xs font-bold text-center"
+                style={{ background: 'rgba(203,213,225,0.85)', color: '#000' }}>Buy Silver</Link>
+              <Link to="/sell?metal=silver" className="flex-1 py-2 rounded-xl text-xs font-bold text-center"
+                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)' }}>Sell</Link>
+            </div>
+          </div>
+        </motion.div>
+      </motion.div>
+
+        </div>{/* end right col */}
+      </div>{/* end main grid */}
+
+    </motion.div>
   );
 }

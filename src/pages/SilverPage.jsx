@@ -15,6 +15,8 @@ export default function SilverPage() {
   const navigate = useNavigate();
   const [silverBalance, setSilverBalance] = useState(0);
   const [showLockIn, setShowLockIn] = useState(false);
+  const [showUpiModal, setShowUpiModal] = useState(false);
+  const [utr, setUtr] = useState('');
 
   useEffect(() => {
     api.get('/silver/rate.php').then(r => setRate(r.data.data.current_rate));
@@ -55,54 +57,37 @@ export default function SilverPage() {
       return;
     }
 
+    if (paymentMethod === 'UPI') {
+      setShowUpiModal(true);
+      setLoading(false);
+      return;
+    }
+  };
+
+  const submitManualUpi = async () => {
+    if (!utr || utr.length < 6) {
+      toast.error('Please enter a valid UTR / Reference ID');
+      return;
+    }
+    setLoading(true);
     try {
-      const orderRes = await api.post('/payment/create_order.php', { amount_inr: parseFloat(amount) });
-      if (!orderRes.data.success) {
-        toast.error('Failed to initiate payment');
-        setLoading(false);
-        return;
+      const res = await api.post('/silver/buy.php', {
+        amount_inr: parseFloat(amount),
+        payment_method: 'UPI',
+        payment_id: utr
+      });
+      if (res.data.success) {
+        toast.success(`Successfully acquired ${formatGrams(res.data.data.silver_grams)} silver!`);
+        setAmount('');
+        setSilverBalance(prev => prev + res.data.data.silver_grams);
+        setShowUpiModal(false);
+        setUtr('');
+        setShowLockIn(true);
+      } else {
+        toast.error(res.data.message);
       }
-
-      const { order_id, key } = orderRes.data.data;
-
-      const options = {
-        key: key,
-        amount: parseFloat(amount) * 100,
-        currency: 'INR',
-        name: 'SilverVault',
-        description: `Purchase of ${buyGrams.toFixed(4)}g Silver`,
-        order_id: order_id,
-        handler: async function (response) {
-          setLoading(true);
-          try {
-            const res = await api.post('/silver/buy.php', {
-              amount_inr: parseFloat(amount),
-              payment_method: 'UPI',
-              payment_id: response.razorpay_payment_id,
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_signature: response.razorpay_signature
-            });
-            if (res.data.success) {
-              toast.success(`Successfully acquired ${formatGrams(res.data.data.silver_grams)} silver!`);
-              setAmount('');
-              setSilverBalance(prev => prev + res.data.data.silver_grams);
-              setShowLockIn(true);
-            } else {
-              toast.error(res.data.message);
-            }
-          } catch (err) {
-            toast.error('Transaction failed');
-          }
-          setLoading(false);
-        },
-        prefill: { name: user?.name, contact: user?.mobile },
-        theme: { color: '#9CA3AF' } // Silver color theme
-      };
-
-      const rzp = new window.Razorpay(options);
-      rzp.open();
     } catch (err) {
-      toast.error('Failed to initiate Razorpay');
+      toast.error('Transaction failed');
     }
     setLoading(false);
   };
@@ -209,6 +194,57 @@ export default function SilverPage() {
           </div>
         </div>
       </div>
+
+      {showUpiModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-[#111] border border-gray-300/30 rounded-2xl p-6 max-w-md w-full shadow-2xl relative">
+            <button 
+              onClick={() => setShowUpiModal(false)}
+              className="absolute top-4 right-4 text-white/40 hover:text-white"
+            >
+              ✕
+            </button>
+            <h2 className="text-xl font-bold text-white mb-2">Complete UPI Payment</h2>
+            <p className="text-white/60 text-sm mb-6">Please transfer exactly <span className="text-gray-300 font-bold">₹{amount}</span> to the UPI ID below and enter the UTR/Reference ID to verify your transaction.</p>
+            
+            <div className="bg-black/50 border border-white/10 rounded-xl p-4 flex flex-col items-center justify-center mb-6">
+              <span className="text-white/40 text-xs uppercase tracking-wider mb-2">Scan or Copy UPI ID</span>
+              <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=goldbindia@oksbi&pn=Silver%20Platform&am=${amount}&cu=INR`} alt="UPI QR" className="rounded-lg mb-4 bg-white p-2" />
+              <div className="flex items-center gap-3 bg-white/5 px-4 py-2 rounded-lg w-full justify-between">
+                <span className="text-gray-300 font-bold font-mono text-lg tracking-wider">goldbindia@oksbi</span>
+                <button 
+                  onClick={() => {
+                    navigator.clipboard.writeText('goldbindia@oksbi');
+                    toast.success('UPI ID copied!');
+                  }}
+                  className="text-white/60 hover:text-white text-xs underline"
+                >
+                  Copy
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-2 mb-6">
+              <label className="text-white/40 text-xs font-bold uppercase tracking-wider">UTR / Reference ID</label>
+              <input 
+                type="text" 
+                value={utr}
+                onChange={e => setUtr(e.target.value)}
+                placeholder="Enter 12-digit UTR number" 
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-gray-300"
+              />
+            </div>
+
+            <button
+              onClick={submitManualUpi}
+              disabled={loading || !utr}
+              className="w-full bg-gray-300 text-black font-bold py-4 rounded-xl flex items-center justify-center transition-colors"
+            >
+              {loading ? 'Verifying...' : 'Verify Payment'}
+            </button>
+          </div>
+        </div>
+      )}
       <LockInModal 
         isOpen={showLockIn}
         onClose={() => setShowLockIn(false)}

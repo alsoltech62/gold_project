@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
 import { Shield, Smartphone, Key, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import logo from '../assets/logo.png';
+import logo from '../assets/GoldBarPay.png';
 
 export default function LoginPage() {
   const [step, setStep] = useState('mobile');
@@ -66,168 +66,189 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background Orbs for Premium Feel */}
-      <motion.div
-        animate={{ scale: [1, 1.1, 1], opacity: [0.1, 0.2, 0.1] }}
-        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#D4AF37]/20 rounded-full blur-[120px]"
-      />
-      <motion.div
-        animate={{ scale: [1, 1.2, 1], opacity: [0.05, 0.15, 0.05] }}
-        transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-        className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-[#D4AF37]/10 rounded-full blur-[120px]"
-      />
+    <div className="min-h-screen flex relative overflow-hidden" style={{ background: 'var(--bg-void)' }}>
 
-      <div className="w-full max-w-md relative z-10">
-        <motion.div
-          initial={{ y: -50, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="text-center mb-10"
-        >
-          <motion.div
-            whileHover={{ scale: 1.05, rotate: 0 }}
-            className="inline-flex items-center justify-center w-24 h-24 rounded-full border-2 border-[#D4AF37]/50 shadow-[0_0_30px_rgba(212,175,55,0.3)] mb-6 transition-transform duration-500 bg-black p-2"
-          >
-            <img src={logo} alt="Logo" className="w-full h-full object-contain" />
+      {/* ── Ambient glows ── */}
+      <motion.div animate={{ scale: [1,1.15,1], opacity:[0.06,0.14,0.06] }} transition={{ duration: 6, repeat: Infinity }}
+        className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full pointer-events-none"
+        style={{ background: '#D4AF37', filter: 'blur(120px)' }} />
+      <motion.div animate={{ scale: [1,1.2,1], opacity:[0.03,0.08,0.03] }} transition={{ duration: 9, repeat: Infinity, delay: 2 }}
+        className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full pointer-events-none"
+        style={{ background: '#D4AF37', filter: 'blur(160px)' }} />
+
+      {/* ── LEFT BRANDING PANEL (hidden on mobile) ── */}
+      <div className="hidden lg:flex flex-col justify-between w-[45%] p-14 relative"
+        style={{ background: 'linear-gradient(160deg, rgba(22,18,8,0.95) 0%, rgba(8,6,2,0.98) 100%)', borderRight: '1px solid rgba(212,175,55,0.1)' }}>
+
+        {/* Top logo */}
+        <motion.div initial={{ opacity:0, y:-20 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.7 }}>
+          <div className="relative inline-block">
+            <div className="absolute inset-0 rounded-full blur-xl opacity-50" style={{ background: 'rgba(212,175,55,0.5)', transform: 'scale(1.4)' }} />
+            <img src={logo} alt="GoldBar" className="h-14 relative z-10 object-contain" />
+          </div>
+        </motion.div>
+
+        {/* Center content */}
+        <div>
+          <motion.div initial={{ opacity:0, x:-30 }} animate={{ opacity:1, x:0 }} transition={{ duration:0.7, delay:0.2 }}>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] mb-4" style={{ color: 'rgba(212,175,55,0.5)' }}>Premium Investment</p>
+            <h1 className="text-5xl font-black leading-tight mb-6 text-white">
+              Invest in<br />
+              <span style={{ background: 'linear-gradient(135deg,#F5C518,#D4AF37,#BF953F)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                Pure Gold
+              </span>
+            </h1>
+            <p className="text-base leading-relaxed" style={{ color: 'rgba(255,255,255,0.4)' }}>
+              Buy, sell, and grow your precious metal portfolio with real-time prices and secure digital vaults.
+            </p>
           </motion.div>
-          <p className="text-white/60 font-medium">The Gold Standard of Digital Savings</p>
+
+          {/* Stats */}
+          <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.4, duration:0.6 }}
+            className="grid grid-cols-3 gap-4 mt-10">
+            {[
+              { val: '24K', label: 'Pure Gold' },
+              { val: '99.9%', label: 'Purity' },
+              { val: 'Live', label: 'Prices' },
+            ].map(s => (
+              <div key={s.label} className="text-center p-4 rounded-2xl"
+                style={{ background: 'rgba(212,175,55,0.05)', border: '1px solid rgba(212,175,55,0.12)' }}>
+                <p className="font-black text-lg" style={{ color: '#D4AF37' }}>{s.val}</p>
+                <p className="text-[11px] mt-1 font-medium" style={{ color: 'rgba(255,255,255,0.3)' }}>{s.label}</p>
+              </div>
+            ))}
+          </motion.div>
+        </div>
+
+        {/* Bottom trust badge */}
+        <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.6 }}
+          className="flex items-center gap-3 px-5 py-3 rounded-2xl w-fit"
+          style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+          <Shield size={16} style={{ color: '#4ade80' }} />
+          <span className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>Bank-Grade Security · RBI Compliant</span>
         </motion.div>
+      </div>
 
-        <motion.div
-          initial={{ y: 50, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-          className="card-premium border-white/5"
-        >
-          <AnimatePresence mode="wait">
-            {step === 'mobile' ? (
-              <motion.form
-                key="mobile"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                transition={{ duration: 0.3 }}
-                onSubmit={sendOTP}
-                className="space-y-6"
-              >
-              <div className="space-y-2">
-                <h2 className="text-2xl font-bold text-white">Welcome Back</h2>
-                <p className="text-white/40 text-sm">Enter your mobile number to receive an OTP</p>
-              </div>
+      {/* ── RIGHT FORM PANEL ── */}
+      <div className="flex-1 flex items-center justify-center p-6 sm:p-10 lg:p-16">
+        <div className="w-full max-w-sm">
 
-              <div className="space-y-4">
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <Smartphone size={18} className="text-white/40" />
+          {/* Mobile logo */}
+          <motion.div initial={{ opacity:0, y:-20 }} animate={{ opacity:1, y:0 }}
+            className="flex justify-center mb-10 lg:hidden">
+            <div className="relative">
+              <div className="absolute inset-0 blur-xl opacity-50 rounded-full" style={{ background: 'rgba(212,175,55,0.5)', transform: 'scale(1.5)' }} />
+              <img src={logo} alt="GoldBar" className="h-16 relative z-10 object-contain" />
+            </div>
+          </motion.div>
+
+          {/* Form card */}
+          <motion.div
+            initial={{ opacity:0, y:30 }} animate={{ opacity:1, y:0 }}
+            transition={{ duration:0.6, delay:0.15, ease:'easeOut' }}
+            className="rounded-[28px] p-8"
+            style={{ background: 'rgba(14,12,8,0.95)', border: '1px solid rgba(212,175,55,0.15)', boxShadow: '0 30px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(212,175,55,0.08)' }}>
+
+            <AnimatePresence mode="wait">
+              {step === 'mobile' ? (
+                <motion.form key="mobile"
+                  initial={{ opacity:0, x:-20 }} animate={{ opacity:1, x:0 }} exit={{ opacity:0, x:20 }}
+                  transition={{ duration:0.25 }} onSubmit={sendOTP} className="space-y-6">
+
+                  <div>
+                    <div className="badge-gold mb-5">🔐 Secure Login</div>
+                    <h2 className="text-2xl font-black text-white mb-1">Welcome Back</h2>
+                    <p className="text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>Enter your mobile to receive an OTP</p>
                   </div>
-                  <div className="flex">
-                    <span className="bg-white/5 border border-white/10 border-r-0 pl-10 pr-3 flex items-center text-white/60 rounded-l-xl text-sm font-semibold">
-                      +91
-                    </span>
-                    <input
-                      type="tel"
-                      value={mobile}
-                      onChange={e => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                      placeholder="Mobile Number"
-                      className="input-premium rounded-l-none pl-2"
-                      required
-                    />
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                      Mobile Number
+                    </label>
+                    <div className="flex">
+                      <div className="flex items-center gap-2 px-4 rounded-l-[14px] flex-shrink-0"
+                        style={{ background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.2)', borderRight: 'none' }}>
+                        <Smartphone size={15} style={{ color: 'rgba(212,175,55,0.6)' }} />
+                        <span className="text-sm font-bold" style={{ color: 'rgba(255,255,255,0.5)' }}>+91</span>
+                      </div>
+                      <input type="tel" value={mobile}
+                        onChange={e => setMobile(e.target.value.replace(/\D/g,'').slice(0,10))}
+                        placeholder="10-digit number"
+                        className="input-premium flex-1"
+                        style={{ borderRadius: '0 14px 14px 0' }}
+                        required />
+                    </div>
                   </div>
-                </div>
 
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="btn-gold w-full flex items-center justify-center gap-2 group"
-                >
-                  {loading ? (
-                    <div className="w-6 h-6 border-2 border-black/30 border-t-black rounded-full animate-spin"></div>
-                  ) : (
-                    <>
-                      Send OTP
-                      <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                    </>
-                  )}
-                </button>
-              </div>
-              </motion.form>
-            ) : (
-              <motion.form
-                key="otp"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
-                onSubmit={verifyOTP}
-                className="space-y-6"
-              >
-              <div className="space-y-2">
-                <h2 className="text-2xl font-bold text-white">Verify OTP</h2>
-                <p className="text-white/40 text-sm">
-                  We've sent a code to <span className="text-[#D4AF37] font-semibold">+91 {mobile}</span>
-                </p>
-              </div>
+                  <button type="submit" disabled={loading} className="btn-gold w-full py-3.5 text-sm">
+                    {loading
+                      ? <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin mx-auto" />
+                      : <><span>Send OTP</span><ArrowRight size={16} /></>}
+                  </button>
+                </motion.form>
+              ) : (
+                <motion.form key="otp"
+                  initial={{ opacity:0, x:20 }} animate={{ opacity:1, x:0 }} exit={{ opacity:0, x:-20 }}
+                  transition={{ duration:0.25 }} onSubmit={verifyOTP} className="space-y-6">
 
-              <div className="space-y-4">
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <Key size={18} className="text-white/40" />
+                  <div>
+                    <div className="badge-gold mb-5">✉️ OTP Sent</div>
+                    <h2 className="text-2xl font-black text-white mb-1">Verify OTP</h2>
+                    <p className="text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                      Code sent to <span style={{ color: '#D4AF37', fontWeight: 700 }}>+91 {mobile}</span>
+                    </p>
                   </div>
-                  <input
-                    type="text"
-                    value={otp}
-                    onChange={e => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    placeholder="Enter 6-digit OTP"
-                    className="input-premium pl-12 text-center text-xl tracking-[0.5em] font-bold"
-                    maxLength={6}
-                    required
-                  />
-                </div>
 
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="btn-gold w-full flex items-center justify-center gap-2"
-                >
-                  {loading ? (
-                    <div className="w-6 h-6 border-2 border-black/30 border-t-black rounded-full animate-spin"></div>
-                  ) : (
-                    'Verify & Login'
-                  )}
-                </button>
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                      6-Digit OTP
+                    </label>
+                    <div className="relative">
+                      <Key size={16} className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: 'rgba(212,175,55,0.5)' }} />
+                      <input type="text" value={otp}
+                        onChange={e => setOtp(e.target.value.replace(/\D/g,'').slice(0,6))}
+                        placeholder="• • • • • •"
+                        className="input-premium pl-11 text-center text-2xl tracking-[0.6em] font-black"
+                        maxLength={6} required />
+                    </div>
+                  </div>
 
-                <button
-                  type="button"
-                  onClick={() => setStep('mobile')}
-                  className="w-full text-white/40 text-sm font-medium hover:text-[#D4AF37] transition-colors"
-                >
-                  Change Mobile Number
-                </button>
-              </div>
-              </motion.form>
-            )}
-          </AnimatePresence>
-        </motion.div>
+                  <button type="submit" disabled={loading} className="btn-gold w-full py-3.5 text-sm">
+                    {loading
+                      ? <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin mx-auto" />
+                      : 'Verify & Login'}
+                  </button>
 
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="text-center mt-6 text-white/40 text-sm"
-        >
-          Don't have an account? <button onClick={() => navigate('/signup')} className="text-[#D4AF37] font-bold hover:underline">Sign Up</button>
-        </motion.p>
+                  <button type="button" onClick={() => setStep('mobile')}
+                    className="w-full text-sm font-semibold transition-colors py-1"
+                    style={{ color: 'rgba(255,255,255,0.3)' }}
+                    onMouseEnter={e => e.currentTarget.style.color='#D4AF37'}
+                    onMouseLeave={e => e.currentTarget.style.color='rgba(255,255,255,0.3)'}>
+                    ← Change mobile number
+                  </button>
+                </motion.form>
+              )}
+            </AnimatePresence>
+          </motion.div>
 
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1, duration: 1 }}
-          className="text-center text-white/30 text-xs mt-8 font-medium uppercase tracking-widest"
-        >
-          Secure Multi-Factor Authentication
-        </motion.p>
+          {/* Signup link */}
+          <motion.p initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.5 }}
+            className="text-center mt-6 text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>
+            Don't have an account?{' '}
+            <button onClick={() => navigate('/signup')}
+              className="font-bold transition-colors" style={{ color: '#D4AF37' }}>
+              Sign Up
+            </button>
+          </motion.p>
+
+          <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.8 }}
+            className="flex items-center justify-center gap-2 mt-8">
+            <Shield size={12} style={{ color: 'rgba(255,255,255,0.2)' }} />
+            <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.2)' }}>
+              Secure Multi-Factor Auth
+            </p>
+          </motion.div>
+        </div>
       </div>
     </div>
   );

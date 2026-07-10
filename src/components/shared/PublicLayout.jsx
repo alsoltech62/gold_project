@@ -1,7 +1,7 @@
 import React from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import logoW from '../../assets/logo-w.png';
+import logoW from '../../assets/GoldBarPay.png';
 
 export default function PublicLayout() {
   const navigate = useNavigate();

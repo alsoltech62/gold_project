@@ -16,7 +16,7 @@ export default function StatCard({ label, value, sub, icon: Icon, color = 'yello
   };
 
   return (
-    <div className={`card-premium relative overflow-hidden group hover:border-[#D4AF37]/30 transition-all duration-500`}>
+    <div className={`card-premium p-6 relative overflow-hidden group hover:border-[#D4AF37]/30 transition-all duration-500`}>
       {/* Decorative Gradient Background */}
       <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${colors[color]} opacity-10 rounded-full blur-3xl -mr-16 -mt-16 transition-transform group-hover:scale-150 duration-700`}></div>
       

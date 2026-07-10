@@ -59,13 +59,6 @@ function AppContent() {
   const { user } = useAuth();
   const [showSplash, setShowSplash] = useState(true);
 
-  // Skip splash if user is already logged in
-  useEffect(() => {
-    if (user) {
-      setShowSplash(false);
-    }
-  }, [user]);
-
   return (
     <>
       <Toaster position="top-right" toastOptions={{
@@ -127,7 +120,7 @@ function AppContent() {
           <Route path="settings" element={<AdminSettings />} />
         </Route>
         
-        <Route path="*" element={<Navigate to="/welcome" replace />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </>
   );

@@ -25,4 +25,4 @@ api.interceptors.response.use(
 
 export default api;
 export const formatINR = n => '₹' + Number(n).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-export const formatGrams = g => Number(g).toFixed(4) + 'g';
+export const formatGrams = g => Number(g || 0).toFixed(4) + 'g';

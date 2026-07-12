@@ -13,7 +13,7 @@ export default function WalletPage() {
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [withdrawLoading, setWithdrawLoading] = useState(false);
-  
+
   const [sipActive, setSipActive] = useState(false);
   const [sipAmount, setSipAmount] = useState('');
   const [sipFreq, setSipFreq] = useState('monthly');
@@ -29,7 +29,7 @@ export default function WalletPage() {
 
   const fetchBankDetails = () => {
     api.get('/user/profile.php').then(r => {
-      if(r.data.success) {
+      if (r.data.success) {
         setBankDetails({
           bankName: r.data.data.bank_name,
           accountNumber: r.data.data.account_number,
@@ -42,7 +42,7 @@ export default function WalletPage() {
 
   const fetchDashboard = () => {
     api.get('/user/dashboard.php').then(r => {
-      if(r.data.success) {
+      if (r.data.success) {
         setInrBalance(r.data.data.inr_wallet);
         setJapsanBalance(r.data.data.japsan_wallet);
         setSipActive(r.data.data.sip_active);
@@ -51,7 +51,7 @@ export default function WalletPage() {
       }
     });
     api.get('/user/sip_history.php').then(r => {
-      if(r.data.success) setSipHistory(r.data.data);
+      if (r.data.success) setSipHistory(r.data.data);
     });
   };
 
@@ -89,7 +89,7 @@ export default function WalletPage() {
       } else {
         toast.error(res.data.message);
       }
-    } catch(err) {
+    } catch (err) {
       toast.error('Failed to update SIP');
     }
     setSipLoading(false);
@@ -126,7 +126,7 @@ export default function WalletPage() {
         {/* Deposit Card */}
         <div className="bg-[#1a1a1a] rounded-3xl p-8 border border-white/5 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-          
+
           <div className="mb-8 relative z-10 flex gap-8">
             <div>
               <div className="flex items-center gap-2 mb-1">
@@ -153,8 +153,8 @@ export default function WalletPage() {
                 <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] mb-2 block">Amount</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-amber-500 font-black">₹</div>
-                  <input 
-                    type="number" 
+                  <input
+                    type="number"
                     value={amount}
                     onChange={e => setAmount(e.target.value)}
                     placeholder="0.00"
@@ -164,22 +164,22 @@ export default function WalletPage() {
               </div>
             </div>
             <div className="flex gap-3 mt-2">
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 disabled={loading || !amount}
                 className="flex-1 bg-amber-500 text-black font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 hover:bg-amber-400 transition-colors disabled:opacity-50"
               >
                 {loading ? 'Processing...' : <><Wallet size={18} /> Deposit</>}
               </button>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={() => setShowWithdrawModal(true)}
                 className="flex-1 bg-white/10 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 hover:bg-white/20 transition-colors"
               >
                 Withdraw
               </button>
             </div>
-            
+
             <div className="bg-black/40 p-4 rounded-xl border border-white/5 mt-4 space-y-3">
               <p className="text-[11px] leading-relaxed text-white/70">
                 <span className="font-bold text-amber-500">Deposit:</span> Add funds to your wallet. When your INR balance reaches ₹1,000, it automatically converts into Digital Gold to secure your savings.
@@ -215,8 +215,8 @@ export default function WalletPage() {
             <div className="space-y-4 opacity-100 transition-opacity">
               <div>
                 <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] mb-2 block">SIP Amount</label>
-                <input 
-                  type="number" 
+                <input
+                  type="number"
                   value={sipAmount}
                   onChange={e => setSipAmount(e.target.value)}
                   placeholder="Min ₹10/day or ₹100/month"
@@ -226,7 +226,7 @@ export default function WalletPage() {
 
               <div>
                 <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] mb-2 block">Frequency</label>
-                <select 
+                <select
                   value={sipFreq}
                   onChange={e => setSipFreq(e.target.value)}
                   className="w-full bg-[#2a2a2a] border border-white/10 rounded-xl px-4 py-3 text-white focus:border-blue-500 focus:outline-none"
@@ -237,15 +237,15 @@ export default function WalletPage() {
               </div>
             </div>
 
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={sipLoading}
               className="w-full bg-blue-500 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-blue-600 transition-colors"
             >
               {sipLoading ? 'Saving...' : 'Save SIP Settings'}
             </button>
           </form>
-          
+
           {sipHistory && (
             <div className="mt-8 pt-8 border-t border-white/5">
               <h3 className="text-white font-bold mb-4">SIP Investment Summary</h3>
@@ -291,8 +291,8 @@ export default function WalletPage() {
                 <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] mb-2 block">Amount to Withdraw</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-amber-500 font-black">₹</div>
-                  <input 
-                    type="number" 
+                  <input
+                    type="number"
                     value={withdrawAmount}
                     onChange={e => setWithdrawAmount(e.target.value)}
                     placeholder="0.00"

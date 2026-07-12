@@ -182,6 +182,23 @@ export default function DashboardPage() {
         ))}
       </motion.div>
 
+      {/* ── ACTIVE SIP INFO ── */}
+      {data?.sip_active && (
+        <motion.div variants={itemVariants} className="flex items-center justify-between p-4 rounded-[20px]"
+          style={{ background: 'rgba(74,222,128,0.05)', border: '1px solid rgba(74,222,128,0.2)' }}>
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-green-500/20 text-green-400">
+              <RefreshCw size={20} className="animate-spin-slow" />
+            </div>
+            <div>
+              <p className="text-green-400 text-[10px] font-bold uppercase tracking-wider">Active SIP</p>
+              <p className="text-white font-bold text-sm">₹{formatINR(data.sip_amount)} / {String(data.sip_frequency || 'MONTHLY').toUpperCase()}</p>
+            </div>
+          </div>
+          <Link to="/wallet" className="text-green-400 text-xs font-bold px-3 py-1.5 rounded-lg bg-green-500/10">Manage</Link>
+        </motion.div>
+      )}
+
       {/* ── RECENT TRANSACTIONS ── */}
       <motion.div variants={itemVariants}>
         <div className="flex items-center justify-between mb-3">
@@ -339,7 +356,11 @@ export default function DashboardPage() {
                 <p className="text-xs font-semibold" style={{ color: '#D4AF37' }}>{formatGrams(data?.total_gold_grams)} gm</p>
               </div>
             </div>
-            <div className="divider-gold mb-3" />
+            <div className="flex justify-between items-center mb-2 mt-2">
+              <p className="text-xs text-white/50">Locked</p>
+              <p className="text-xs font-semibold text-white/80">{formatGrams(data?.locked_gold || 0)}</p>
+            </div>
+            <div className="divider-gold mb-3 mt-1" />
             <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>Current Value</p>
             <p className="text-white font-bold text-xl mb-4">₹{formatINR(data?.gold_current_value)}</p>
             <div className="flex gap-2">
@@ -365,7 +386,11 @@ export default function DashboardPage() {
                 <p className="text-xs font-semibold" style={{ color: '#94a3b8' }}>{formatGrams(data?.total_silver_grams)} gm</p>
               </div>
             </div>
-            <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(148,163,184,0.3), transparent)', marginBottom: 12 }} />
+            <div className="flex justify-between items-center mb-2 mt-2">
+              <p className="text-xs text-white/50">Locked</p>
+              <p className="text-xs font-semibold text-white/80">{formatGrams(data?.locked_silver || 0)}</p>
+            </div>
+            <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(148,163,184,0.3), transparent)', marginBottom: 12, marginTop: 4 }} />
             <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>Current Value</p>
             <p className="text-white font-bold text-xl mb-4">₹{formatINR(data?.silver_current_value)}</p>
             <div className="flex gap-2">

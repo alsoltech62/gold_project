@@ -42,6 +42,29 @@ export default function ProfilePage() {
     }
   };
 
+  const handleKycUpload = async (e, fieldName) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const formData = new FormData();
+    formData.append(fieldName, file);
+    
+    const loadingToast = toast.loading(`Uploading ${fieldName.replace('_', ' ')}...`);
+    try {
+      const res = await api.post('/user/profile.php', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      if (res.data.success) {
+        toast.success('Document uploaded!', { id: loadingToast });
+        api.get('/user/profile.php').then(r => setForm(r.data.data || {}));
+      } else {
+        toast.error(res.data.message || 'Upload failed', { id: loadingToast });
+      }
+    } catch (err) {
+      toast.error('Upload failed', { id: loadingToast });
+    }
+  };
+
   const Field = ({ label, name, placeholder, type='text' }) => (
     <div>
       <label className="block text-gray-400 text-sm mb-2">{label}</label>
@@ -97,7 +120,28 @@ export default function ProfilePage() {
             <div className="space-y-4">
               <Field label="Date of Birth" name="dob" placeholder="YYYY-MM-DD" type="date" />
               <Field label="Aadhar Number" name="aadhar_number" placeholder="12-digit Aadhar" />
+              <div>
+                <label className="block text-gray-400 text-sm mb-2">Aadhar Front Image</label>
+                <div className="flex items-center gap-4">
+                  {form.aadhar_front && <span className="text-green-500 text-xs">✓ Uploaded</span>}
+                  <input type="file" accept="image/*" onChange={(e) => handleKycUpload(e, 'aadhar_front')} className="text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#2a2a2a] file:text-white hover:file:bg-[#333]" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-gray-400 text-sm mb-2">Aadhar Back Image</label>
+                <div className="flex items-center gap-4">
+                  {form.aadhar_back && <span className="text-green-500 text-xs">✓ Uploaded</span>}
+                  <input type="file" accept="image/*" onChange={(e) => handleKycUpload(e, 'aadhar_back')} className="text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#2a2a2a] file:text-white hover:file:bg-[#333]" />
+                </div>
+              </div>
               <Field label="PAN Number" name="pan_number" placeholder="ABCDE1234F" />
+              <div>
+                <label className="block text-gray-400 text-sm mb-2">PAN Card Image</label>
+                <div className="flex items-center gap-4">
+                  {form.pan_image && <span className="text-green-500 text-xs">✓ Uploaded</span>}
+                  <input type="file" accept="image/*" onChange={(e) => handleKycUpload(e, 'pan_image')} className="text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#2a2a2a] file:text-white hover:file:bg-[#333]" />
+                </div>
+              </div>
             </div>
           </div>
           

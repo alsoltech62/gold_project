@@ -125,7 +125,7 @@ export default function Layout({ isAdmin }) {
         >
           <div className="relative">
             <div className="absolute inset-0 rounded-xl blur-lg opacity-60" style={{ background: 'rgba(212,175,55,0.4)' }} />
-            <img src={logoW} alt="GoldBar" className="h-9 relative z-10 object-contain" />
+            <img src={logoW} alt="GoldBar" className="h-14 relative z-10 object-contain" />
           </div>
         </motion.div>
       </div>

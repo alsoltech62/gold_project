@@ -8,7 +8,11 @@ export default function AdminSettings() {
     delivery_charge: '',
     package_charge: '',
     forwarding_charge: '',
-    sip_penalty_charge: ''
+    sip_penalty_charge: '',
+    gold_markup_type: 'fixed',
+    gold_markup_value: '',
+    silver_markup_type: 'fixed',
+    silver_markup_value: ''
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -100,6 +104,52 @@ export default function AdminSettings() {
               onChange={handleChange}
               className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#D4AF37]"
             />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Gold Live Rate Markup</label>
+            <div className="flex gap-4">
+              <input
+                type="number"
+                name="gold_markup_value"
+                value={settings.gold_markup_value}
+                onChange={handleChange}
+                placeholder="Markup Value"
+                className="flex-1 bg-[#111] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#D4AF37]"
+              />
+              <select
+                name="gold_markup_type"
+                value={settings.gold_markup_type}
+                onChange={handleChange}
+                className="w-40 bg-[#111] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#D4AF37]"
+              >
+                <option value="fixed">Fixed (₹)</option>
+                <option value="percent">Percent (%)</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Silver Live Rate Markup</label>
+            <div className="flex gap-4">
+              <input
+                type="number"
+                name="silver_markup_value"
+                value={settings.silver_markup_value}
+                onChange={handleChange}
+                placeholder="Markup Value"
+                className="flex-1 bg-[#111] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#D4AF37]"
+              />
+              <select
+                name="silver_markup_type"
+                value={settings.silver_markup_type}
+                onChange={handleChange}
+                className="w-40 bg-[#111] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#D4AF37]"
+              >
+                <option value="fixed">Fixed (₹)</option>
+                <option value="percent">Percent (%)</option>
+              </select>
+            </div>
           </div>
 
           <button

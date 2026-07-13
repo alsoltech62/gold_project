@@ -81,7 +81,8 @@ function AppContent() {
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="buy" element={<BuyFlowPage />} />
           <Route path="buy/one-time" element={<BuyGoldPage />} />
-          <Route path="buy/sip" element={<SipPage />} />
+          <Route path="buy/sip" element={<SipPage metalType="gold" />} />
+          <Route path="silver/sip" element={<SipPage metalType="silver" />} />
           <Route path="sell" element={<SellFlowPage />} />
           <Route path="sell/now" element={<SellGoldPage />} />
           <Route path="sell/silver/now" element={<SellSilverPage />} />

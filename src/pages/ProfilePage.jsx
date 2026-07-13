@@ -167,7 +167,7 @@ export default function ProfilePage() {
                     onClick={() => {
                       if (navigator.share) {
                         navigator.share({
-                          title: 'Join Gold Savings',
+                          title: 'Join GoldBarPay',
                           text: `Use my referral code ${form.mobile} to sign up and earn rewards!`,
                           url: `https://gold.foodpulse.in/signup?ref=${form.mobile}`
                         }).catch(console.error);

@@ -17,6 +17,7 @@ export default function WalletPage() {
   const [sipActive, setSipActive] = useState(false);
   const [sipAmount, setSipAmount] = useState('');
   const [sipFreq, setSipFreq] = useState('monthly');
+  const [sipMetal, setSipMetal] = useState('gold');
   const [sipLoading, setSipLoading] = useState(false);
   const [sipHistory, setSipHistory] = useState(null);
 
@@ -48,6 +49,7 @@ export default function WalletPage() {
         setSipActive(r.data.data.sip_active);
         setSipAmount(r.data.data.sip_amount || '');
         setSipFreq(r.data.data.sip_frequency || 'monthly');
+        setSipMetal(r.data.data.sip_metal_type || 'gold');
       }
     });
     api.get('/user/sip_history.php').then(r => {
@@ -81,7 +83,8 @@ export default function WalletPage() {
       const res = await api.post('/user/sip.php', {
         active: sipActive ? 1 : 0,
         amount: parseFloat(sipAmount),
-        frequency: sipFreq
+        frequency: sipFreq,
+        metal_type: sipMetal
       });
       if (res.data.success) {
         toast.success('SIP settings updated');
@@ -235,6 +238,18 @@ export default function WalletPage() {
                   <option value="monthly">Monthly (Min ₹100)</option>
                 </select>
               </div>
+
+              <div>
+                <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] mb-2 block">Metal</label>
+                <select
+                  value={sipMetal}
+                  onChange={e => setSipMetal(e.target.value)}
+                  className="w-full bg-[#2a2a2a] border border-white/10 rounded-xl px-4 py-3 text-white focus:border-blue-500 focus:outline-none"
+                >
+                  <option value="gold">Gold</option>
+                  <option value="silver">Silver</option>
+                </select>
+              </div>
             </div>
 
             <button
@@ -255,7 +270,7 @@ export default function WalletPage() {
                   <p className="text-xl font-black text-white">{formatINR(sipHistory.total_invested)}</p>
                 </div>
                 <div className="p-4 bg-white/5 rounded-xl">
-                  <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mb-1">Gold Acquired</p>
+                  <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mb-1">Total Metal Acquired</p>
                   <p className="text-xl font-black text-[#D4AF37]">{sipHistory.total_gold}g</p>
                 </div>
               </div>
@@ -271,7 +286,7 @@ export default function WalletPage() {
                     </div>
                     <div className="text-right">
                       <p className="text-[#D4AF37] text-xs font-bold">+{txn.gold_grams}g</p>
-                      <p className="text-green-400 text-[10px] uppercase">Success</p>
+                      <p className="text-green-400 text-[10px] uppercase">{txn.metal_type}</p>
                     </div>
                   </div>
                 ))}

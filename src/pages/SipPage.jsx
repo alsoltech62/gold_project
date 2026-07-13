@@ -3,7 +3,7 @@ import { Calendar, CheckCircle2, ChevronRight, ShieldCheck, Zap } from 'lucide-r
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 
-export default function SipPage() {
+export default function SipPage({ metalType = 'gold' }) {
   const [amount, setAmount] = useState('1000');
   const [frequency, setFrequency] = useState('monthly');
   const [date, setDate] = useState('1');
@@ -27,7 +27,7 @@ export default function SipPage() {
       })
       .catch(() => { });
 
-    api.get('/user/sip_history.php')
+    api.get(`/user/sip_history.php?metal_type=${metalType}`)
       .then(r => {
         if (r.data.success) {
           setSipHistory(r.data.data);
@@ -50,7 +50,7 @@ export default function SipPage() {
 
     setLoading(true);
     try {
-      const res = await api.post('/sip/setup.php', { amount, frequency });
+      const res = await api.post('/sip/setup.php', { amount, frequency, metal_type: metalType });
       if (res.data.success) {
         toast.success('SIP Setup successfully!');
       } else {
@@ -65,8 +65,8 @@ export default function SipPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <header>
-        <h1 className="text-3xl font-black text-white tracking-tight">Setup Systematic Investment Plan</h1>
-        <p className="text-white/40 text-sm font-medium mt-1">Automate your gold accumulation journey</p>
+        <h1 className="text-3xl font-black text-white tracking-tight">Setup {metalType === 'silver' ? 'Silver' : 'Gold'} SIP</h1>
+        <p className="text-white/40 text-sm font-medium mt-1">Automate your {metalType} accumulation journey</p>
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -159,7 +159,7 @@ export default function SipPage() {
 
         <div className="space-y-6">
           <div className="card-premium border-green-500/20 bg-gradient-to-br from-green-500/10 to-transparent p-6">
-            <h3 className="text-white font-bold uppercase tracking-widest text-xs mb-6">Why SIP in Gold?</h3>
+            <h3 className="text-white font-bold uppercase tracking-widest text-xs mb-6">Why SIP in {metalType === 'silver' ? 'Silver' : 'Gold'}?</h3>
 
             <ul className="space-y-4">
               <li className="flex items-start gap-3">
@@ -195,7 +195,7 @@ export default function SipPage() {
                   <p className="text-xl font-black text-white">₹{sipHistory.total_invested}</p>
                 </div>
                 <div className="p-4 bg-white/5 rounded-xl border border-white/5">
-                  <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mb-1">Gold Accumulated</p>
+                  <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mb-1">{metalType === 'silver' ? 'Silver' : 'Gold'} Accumulated</p>
                   <p className="text-xl font-black text-green-400">{sipHistory.total_gold}g</p>
                 </div>
               </div>

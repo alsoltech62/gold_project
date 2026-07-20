@@ -120,7 +120,18 @@ export default function NetworkDashboardPage() {
               <button onClick={copyCode} className="p-3 bg-white/5 hover:bg-white/10 rounded-xl text-white transition-all">
                 <Copy size={18} />
               </button>
-              <button className="p-3 bg-[#D4AF37] hover:bg-yellow-500 rounded-xl text-black transition-all shadow-[0_0_15px_rgba(212,175,55,0.4)]">
+              <button onClick={() => {
+                if (navigator.share) {
+                  navigator.share({
+                    title: 'Join GoldBarPay',
+                    text: `Use my referral code ${networkData.referralCode} to sign up and earn rewards!`,
+                    url: `https://goldpay.odofast.in/signup?ref=${networkData.referralCode}`
+                  }).catch(console.error);
+                } else {
+                  navigator.clipboard.writeText(`https://goldpay.odofast.in/signup?ref=${networkData.referralCode}`);
+                  toast.success('Referral link copied!');
+                }
+              }} className="p-3 bg-[#D4AF37] hover:bg-yellow-500 rounded-xl text-black transition-all shadow-[0_0_15px_rgba(212,175,55,0.4)]">
                 <Share2 size={18} />
               </button>
             </div>

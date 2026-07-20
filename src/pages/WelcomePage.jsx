@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import axios from 'axios';
+const BASE_URL = import.meta.env.VITE_API_URL || 'https://goldpay.odofast.in/api';
 import { motion } from 'framer-motion';
 import { 
   Shield, 
@@ -25,6 +27,20 @@ import logo from '../assets/GoldBarPay.png';
 
 export default function WelcomePage() {
   const navigate = useNavigate();
+  const [rates, setRates] = useState(null);
+
+  useEffect(() => {
+    axios.get(`${BASE_URL}/public/rates.php`)
+      .then(res => {
+        if (res.data?.success) {
+          setRates(res.data.data);
+        }
+      })
+      .catch(err => console.error("Error fetching rates:", err));
+  }, []);
+
+  const formatCurrency = (val) => '₹' + Number(val || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
 
   return (
     <div className="min-h-screen bg-[#070707] text-[#e0e0e0] font-sans selection:bg-[#D4AF37] selection:text-black">
@@ -220,38 +236,58 @@ export default function WelcomePage() {
         </div>
       </section>
 
-      {/* ---------------- LIVE GOLD RATE ---------------- */}
+      {/* ---------------- LIVE METAL RATES ---------------- */}
       <section className="max-w-5xl mx-auto px-8 mb-24">
-        <div className="bg-gradient-to-r from-[#111] to-[#0a0a0a] border border-white/10 rounded-2xl p-8 flex flex-col md:flex-row items-center justify-between gap-8">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-[#D4AF37]/10 flex items-center justify-center">
-              <BarChart3 className="text-[#D4AF37]" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Gold Rate */}
+          <div className="bg-gradient-to-r from-[#111] to-[#0a0a0a] border border-white/10 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-6 hover:border-[#D4AF37]/50 transition-colors">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-[#D4AF37]/10 flex items-center justify-center">
+                <BarChart3 className="text-[#D4AF37]" />
+              </div>
+              <div>
+                <h4 className="text-sm text-gray-400 uppercase tracking-widest">Live Gold Rate</h4>
+                <p className="text-xs text-gray-500">24K (999 Pure)</p>
+              </div>
             </div>
-            <div>
-              <h4 className="text-sm text-gray-400 uppercase tracking-widest">Live Gold Rate</h4>
-              <p className="text-xs text-gray-500">Rates updated in real-time</p>
+            
+            <div className="text-center sm:text-right">
+              <div className="flex items-end gap-2 justify-center sm:justify-end">
+                <span className="text-3xl font-bold text-white">{rates ? formatCurrency(rates.gold.rate_per_gram) : '₹---'}</span>
+                <span className="text-sm text-gray-400 mb-1">/gm</span>
+              </div>
+              {rates && (
+                <span className={`text-xs px-2 py-0.5 rounded border inline-block mt-1.5 ${rates.gold.change_percent >= 0 ? 'text-green-500 bg-green-500/10 border-green-500/20' : 'text-red-500 bg-red-500/10 border-red-500/20'}`}>
+                  {rates.gold.change_percent >= 0 ? '+' : ''}{rates.gold.change_percent}%
+                </span>
+              )}
             </div>
           </div>
-          
-          <div className="text-center md:text-left">
-            <p className="text-sm text-gray-400 mb-1">24K Gold (999)</p>
-            <div className="flex items-end gap-3 justify-center md:justify-start">
-              <span className="text-3xl font-bold">₹7,215</span>
-              <span className="text-sm text-gray-400 mb-1">/gm</span>
-              <span className="text-xs text-green-500 bg-green-500/10 px-2 py-0.5 rounded border border-green-500/20 mb-1.5">+1.25%</span>
+
+          {/* Silver Rate */}
+          <div className="bg-gradient-to-r from-[#111] to-[#0a0a0a] border border-white/10 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-6 hover:border-[#94a3b8]/50 transition-colors">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-[#94a3b8]/10 flex items-center justify-center">
+                <BarChart3 className="text-[#94a3b8]" />
+              </div>
+              <div>
+                <h4 className="text-sm text-gray-400 uppercase tracking-widest">Live Silver Rate</h4>
+                <p className="text-xs text-gray-500">99.9% Pure</p>
+              </div>
+            </div>
+            
+            <div className="text-center sm:text-right">
+              <div className="flex items-end gap-2 justify-center sm:justify-end">
+                <span className="text-3xl font-bold text-white">{rates ? formatCurrency(rates.silver.rate_per_gram) : '₹---'}</span>
+                <span className="text-sm text-gray-400 mb-1">/gm</span>
+              </div>
+              {rates && (
+                <span className={`text-xs px-2 py-0.5 rounded border inline-block mt-1.5 ${rates.silver.change_percent >= 0 ? 'text-green-500 bg-green-500/10 border-green-500/20' : 'text-red-500 bg-red-500/10 border-red-500/20'}`}>
+                  {rates.silver.change_percent >= 0 ? '+' : ''}{rates.silver.change_percent}%
+                </span>
+              )}
             </div>
           </div>
-          
-          <div className="w-32 h-12 opacity-50 flex items-end">
-             {/* Mock chart line */}
-             <svg viewBox="0 0 100 30" className="w-full h-full stroke-[#D4AF37] fill-none" strokeWidth="2">
-               <path d="M0,30 L10,25 L20,28 L30,15 L40,20 L50,10 L60,15 L70,5 L80,10 L90,2 L100,0" />
-             </svg>
-          </div>
-          
-          <button className="border border-white/20 px-6 py-2 rounded text-sm hover:bg-white/5 transition-colors">
-            VIEW CHART &rarr;
-          </button>
         </div>
       </section>
 

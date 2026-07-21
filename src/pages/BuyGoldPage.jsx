@@ -12,6 +12,7 @@ export default function BuyGoldPage() {
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('UPI');
   const [showUpiModal, setShowUpiModal] = useState(false);
+  const [showLockIn, setShowLockIn] = useState(false);
   const [utr, setUtr] = useState('');
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -48,7 +49,9 @@ export default function BuyGoldPage() {
         toast.error('Transaction failed.');
       }
       setLoading(false);
+      setLoading(false);
       return;
+    }
     if (paymentMethod === 'UPI') {
       setShowUpiModal(true);
       setLoading(false);
@@ -308,5 +311,4 @@ export default function BuyGoldPage() {
       />
     </div>
   );
-}
 }

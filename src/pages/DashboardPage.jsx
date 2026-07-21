@@ -44,7 +44,18 @@ export default function DashboardPage() {
   const fetchDashboard = () => {
     setRefreshing(true);
     api.get('/user/dashboard.php')
-      .then(r => { setData(r.data.data); setLoading(false); setRefreshing(false); })
+      .then(async r => { 
+        let d = r.data.data;
+        try {
+          const txRes = await api.get('/user/transactions.php?page=1');
+          if (txRes.data?.data?.length > 0) {
+            d.recent_transactions = txRes.data.data.slice(0, 5);
+          }
+        } catch (e) {}
+        setData(d); 
+        setLoading(false); 
+        setRefreshing(false); 
+      })
       .catch(() => { setLoading(false); setRefreshing(false); });
   };
 
@@ -57,11 +68,25 @@ export default function DashboardPage() {
     }
   }, [data?.banners]);
 
-  const pl = data?.profit_loss_inr ?? 0;
-  const plPct = data?.total_invested_inr > 0 ? ((pl / data.total_invested_inr) * 100).toFixed(2) : '0.00';
   const goldRate = data?.gold_rate ?? 0;
   const silverRate = data?.silver_rate ?? 0;
-  const getBannerUrl = url => url?.startsWith('http') ? url : `https://goldpay.odofast.in/${url}`;
+  
+  // Calculate true current value by including locked metals
+  const goldGrams = Number(data?.total_gold_grams || 0);
+  const lockedGold = Number(data?.locked_gold || 0);
+  const totalGoldGrams = goldGrams + lockedGold;
+
+  const silverGrams = Number(data?.total_silver_grams || 0);
+  const lockedSilver = Number(data?.locked_silver || 0);
+  const totalSilverGrams = silverGrams + lockedSilver;
+  
+  const calculatedCurrentValue = (totalGoldGrams * goldRate) + (totalSilverGrams * silverRate);
+  
+  const totalInvested = data?.total_invested_inr ?? 0;
+  const pl = calculatedCurrentValue - totalInvested;
+  const plPct = totalInvested > 0 ? ((pl / totalInvested) * 100).toFixed(2) : '0.00';
+
+  const getBannerUrl = url => url?.startsWith('http') ? url : `https://goldbarpe.com/${url}`;
 
   const containerVariants = {
     hidden: {},
@@ -237,7 +262,7 @@ export default function DashboardPage() {
                   </div>
                   <div>
                     <p className="text-white font-bold text-sm capitalize leading-none">
-                      {t.type === 'delivery' ? 'Delivery' : `${t.metal_type || 'Gold'} ${t.type}`}
+                      {t.type === 'delivery' ? 'Delivery' : `${t.metal_type === 'silver' ? 'Silver' : 'Gold'} ${t.type}`}
                     </p>
                     <p className="text-[11px] mt-1" style={{ color: 'rgba(255,255,255,0.3)' }}>
                       {format(new Date(t.created_at), 'MMM dd • hh:mm a')}
@@ -313,7 +338,7 @@ export default function DashboardPage() {
           </div>
 
           <h2 className="font-black text-white mb-3" style={{ fontSize: '2.6rem', lineHeight: 1, letterSpacing: '-0.02em', textShadow: '0 0 40px rgba(212,175,55,0.2)' }}>
-            ₹<AnimatedNumber value={data?.current_value_inr ?? 0} />
+            ₹<AnimatedNumber value={calculatedCurrentValue || 0} />
           </h2>
 
           <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold ${pl >= 0 ? '' : ''}`}
@@ -335,12 +360,12 @@ export default function DashboardPage() {
             <div className="h-8 w-px" style={{ background: 'rgba(255,255,255,0.07)' }} />
             <div className="text-center">
               <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.3)' }}>Gold</p>
-              <p className="font-bold text-sm" style={{ color: '#D4AF37' }}>{formatGrams(data?.total_gold_grams)}g</p>
+              <p className="font-bold text-sm" style={{ color: '#D4AF37' }}>{formatGrams(totalGoldGrams)}</p>
             </div>
             <div className="h-8 w-px" style={{ background: 'rgba(255,255,255,0.07)' }} />
             <div className="text-center">
               <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.3)' }}>Silver</p>
-              <p className="font-bold text-sm" style={{ color: '#94a3b8' }}>{formatGrams(data?.total_silver_grams)}g</p>
+              <p className="font-bold text-sm" style={{ color: '#94a3b8' }}>{formatGrams(totalSilverGrams)}</p>
             </div>
           </div>
         </div>

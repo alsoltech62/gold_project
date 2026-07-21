@@ -7,6 +7,9 @@ export default function SipPage({ metalType = 'gold' }) {
   const [amount, setAmount] = useState('1000');
   const [frequency, setFrequency] = useState('monthly');
   const [date, setDate] = useState('1');
+  const [time, setTime] = useState('10:00');
+  const [day, setDay] = useState('Monday');
+  const [monthDate, setMonthDate] = useState('January 1');
 
   const [loading, setLoading] = useState(false);
   const [sipHistory, setSipHistory] = useState(null);
@@ -118,17 +121,60 @@ export default function SipPage({ metalType = 'gold' }) {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Deduction Date</label>
-                    <select
-                      value={date}
-                      onChange={e => setDate(e.target.value)}
-                      className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-4 text-sm font-bold text-white focus:outline-none focus:border-green-500"
-                    >
-                      <option value="1">1st of the month</option>
-                      <option value="5">5th of the month</option>
-                      <option value="10">10th of the month</option>
-                      <option value="15">15th of the month</option>
-                    </select>
+                    {frequency === 'daily' && (
+                      <>
+                        <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Deduction Time</label>
+                        <input
+                          type="time"
+                          value={time}
+                          onChange={e => setTime(e.target.value)}
+                          className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-4 text-sm font-bold text-white focus:outline-none focus:border-green-500"
+                        />
+                      </>
+                    )}
+                    {frequency === 'weekly' && (
+                      <>
+                        <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Deduction Day</label>
+                        <select
+                          value={day}
+                          onChange={e => setDay(e.target.value)}
+                          className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-4 text-sm font-bold text-white focus:outline-none focus:border-green-500"
+                        >
+                          {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(d => (
+                            <option key={d} value={d}>{d}</option>
+                          ))}
+                        </select>
+                      </>
+                    )}
+                    {frequency === 'monthly' && (
+                      <>
+                        <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Deduction Date</label>
+                        <select
+                          value={date}
+                          onChange={e => setDate(e.target.value)}
+                          className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-4 text-sm font-bold text-white focus:outline-none focus:border-green-500"
+                        >
+                          <option value="1">1st of the month</option>
+                          <option value="5">5th of the month</option>
+                          <option value="10">10th of the month</option>
+                          <option value="15">15th of the month</option>
+                          <option value="20">20th of the month</option>
+                          <option value="25">25th of the month</option>
+                        </select>
+                      </>
+                    )}
+                    {frequency === 'yearly' && (
+                      <>
+                        <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Month & Date</label>
+                        <input
+                          type="text"
+                          placeholder="e.g., January 1"
+                          value={monthDate}
+                          onChange={e => setMonthDate(e.target.value)}
+                          className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-4 text-sm font-bold text-white focus:outline-none focus:border-green-500"
+                        />
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -140,7 +186,7 @@ export default function SipPage({ metalType = 'gold' }) {
                 <div>
                   <h4 className="text-green-400 font-bold mb-1">Auto-Debit Authorization</h4>
                   <p className="text-green-400/60 text-xs leading-relaxed">
-                    By proceeding, you authorize us to deduct ₹{amount || 0} from your linked payment method {frequency === 'monthly' ? `on the ${date}th of every month` : 'every week'}. You can pause or cancel your SIP at any time without penalty.
+                    By proceeding, you authorize us to deduct ₹{amount || 0} from your linked payment method {frequency === 'daily' ? `daily at ${time}` : frequency === 'weekly' ? `every ${day}` : frequency === 'monthly' ? `on the ${date}th of every month` : `yearly on ${monthDate}`}. You can pause or cancel your SIP at any time without penalty.
                   </p>
                 </div>
               </div>

@@ -81,7 +81,7 @@ export default function ProfilePage() {
           <div className="relative group">
             <div className="w-20 h-20 rounded-full gold-gradient flex items-center justify-center text-black font-bold text-2xl overflow-hidden">
               {form.profile_photo ? (
-                <img src={`https://goldpay.odofast.in${form.profile_photo}`} alt="Profile" className="w-full h-full object-cover" />
+                <img src={`https://goldbarpe.com${form.profile_photo}`} alt="Profile" className="w-full h-full object-cover" />
               ) : (
                 form.name?.[0]?.toUpperCase() || <User size={28} />
               )}
@@ -169,10 +169,10 @@ export default function ProfilePage() {
                         navigator.share({
                           title: 'Join GoldBarPay',
                           text: `Use my referral code ${form.mobile} to sign up and earn rewards!`,
-                          url: `https://goldpay.odofast.in/signup?ref=${form.mobile}`
+                          url: `https://goldbarpe.com/signup?ref=${form.mobile}`
                         }).catch(console.error);
                       } else {
-                        navigator.clipboard.writeText(`https://goldpay.odofast.in/signup?ref=${form.mobile}`);
+                        navigator.clipboard.writeText(`https://goldbarpe.com/signup?ref=${form.mobile}`);
                         toast.success('Referral link copied!');
                       }
                     }}

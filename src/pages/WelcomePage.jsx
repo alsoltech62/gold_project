@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
-const BASE_URL = import.meta.env.VITE_API_URL || 'https://goldpay.odofast.in/api';
+const BASE_URL = import.meta.env.VITE_API_URL || 'https://goldbarpe.com/api';
 import { motion } from 'framer-motion';
 import { 
   Shield, 

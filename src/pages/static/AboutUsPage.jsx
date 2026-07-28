@@ -20,26 +20,53 @@ export default function AboutUsPage() {
         </div>
 
         <div className="space-y-6 text-gray-300 leading-relaxed relative z-10">
-          <p>
-            Welcome to our premium Gold and Silver savings platform. We are dedicated to making precious metal investments accessible, secure, and transparent for everyone.
-          </p>
-          <p>
-            With years of experience in the bullion market, we provide our users with the best live rates, ensuring that every rupee you invest gets its maximum value in 24K pure gold and 99.9% pure silver.
-          </p>
-          <div className="grid md:grid-cols-3 gap-6 mt-8">
-            <div className="p-4 bg-white/5 rounded-xl border border-white/5">
-              <h3 className="text-amber-500 font-semibold mb-2">Purity Assured</h3>
-              <p className="text-sm">100% certified 24K Gold and 99.9% pure Silver.</p>
-            </div>
-            <div className="p-4 bg-white/5 rounded-xl border border-white/5">
-              <h3 className="text-amber-500 font-semibold mb-2">Secure Storage</h3>
-              <p className="text-sm">Bank-grade security for your digital assets.</p>
-            </div>
-            <div className="p-4 bg-white/5 rounded-xl border border-white/5">
-              <h3 className="text-amber-500 font-semibold mb-2">Easy Delivery</h3>
-              <p className="text-sm">Physical delivery to your doorstep across India.</p>
-            </div>
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold text-white mb-2">GOLDBAR PE</h2>
+            <p className="text-amber-500 font-medium mb-4">Buy Gold. Track Gold. Request Physical Delivery.</p>
+            <p className="mb-4">
+              GOLDBAR PE is designed to help users purchase, track, and manage their gold through a simple and secure mobile experience. Whether you're starting with a small amount or building your gold holdings over time, GOLDBAR PE provides a transparent platform to monitor your gold balance and transactions.
+            </p>
           </div>
+
+          <section className="mb-8">
+            <h2 className="text-xl font-semibold text-white mb-3">Key Features</h2>
+            <ul className="list-disc pl-5 space-y-2">
+              <li>Buy gold using secure digital payments</li>
+              <li>Live gold rate updates</li>
+              <li>Track your gold balance in grams</li>
+              <li>Complete transaction history</li>
+              <li>Request physical gold delivery (subject to eligibility and applicable terms)</li>
+              <li>Secure account management</li>
+              <li>Easy-to-use dashboard</li>
+              <li>Notifications for transactions and updates</li>
+              <li>Customer support through email</li>
+            </ul>
+          </section>
+
+          <section className="mb-8">
+            <h2 className="text-xl font-semibold text-white mb-3">Why Choose GOLDBAR PE?</h2>
+            <ul className="space-y-2">
+              <li className="flex items-center gap-2"><span className="text-green-500">✔</span> Transparent system</li>
+              <li className="flex items-center gap-2"><span className="text-green-500">✔</span> User-friendly interface</li>
+              <li className="flex items-center gap-2"><span className="text-green-500">✔</span> Secure transaction records</li>
+              <li className="flex items-center gap-2"><span className="text-green-500">✔</span> Physical delivery request facility</li>
+              <li className="flex items-center gap-2"><span className="text-green-500">✔</span> Dedicated customer support</li>
+            </ul>
+            <p className="mt-4 text-amber-500 font-medium">Download GOLDBAR PE and manage your gold with confidence.</p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold text-white mb-3">About Us</h2>
+            <p className="mb-4">
+              GOLDBAR PE is a digital platform developed to simplify the process of buying, tracking, and managing gold.
+            </p>
+            <p className="mb-4">
+              Our objective is to make gold ownership more convenient through technology while maintaining transparency, security, and customer-first service.
+            </p>
+            <p>
+              We focus on providing a simple user experience, clear transaction records, and responsive customer support.
+            </p>
+          </section>
         </div>
       </motion.div>
     </div>

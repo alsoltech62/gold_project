@@ -18,18 +18,46 @@ export default function PrivacyPolicyPage() {
         </div>
 
         <div className="space-y-6 text-gray-300 leading-relaxed">
-          <p>Last updated: {new Date().toLocaleDateString()}</p>
+          <p>Effective Date: [Add Date]</p>
+          <p>At GOLDBAR PE, protecting your privacy is important to us.</p>
           <section>
-            <h2 className="text-xl font-semibold text-white mb-3">1. Information Collection</h2>
-            <p>We collect information you provide directly to us, such as when you create or modify your account, request services, contact customer support, or otherwise communicate with us.</p>
+            <h2 className="text-xl font-semibold text-white mb-3">Information We Collect</h2>
+            <ul className="list-disc pl-5 space-y-2">
+              <li>Name</li>
+              <li>Mobile Number</li>
+              <li>Email Address</li>
+              <li>Device Information</li>
+              <li>Transaction Information</li>
+              <li>Login Activity</li>
+            </ul>
           </section>
           <section>
-            <h2 className="text-xl font-semibold text-white mb-3">2. Use of Information</h2>
-            <p>We use the information we collect to provide, maintain, and improve our services, process transactions, and send related information, including confirmations and receipts.</p>
+            <h2 className="text-xl font-semibold text-white mb-3">How We Use Information</h2>
+            <p className="mb-2">We use your information to:</p>
+            <ul className="list-disc pl-5 space-y-2">
+              <li>Create and manage your account</li>
+              <li>Process transactions</li>
+              <li>Verify your identity</li>
+              <li>Improve app performance</li>
+              <li>Provide customer support</li>
+              <li>Send important notifications</li>
+            </ul>
           </section>
           <section>
-            <h2 className="text-xl font-semibold text-white mb-3">3. Data Security</h2>
-            <p>We take reasonable measures to help protect information about you from loss, theft, misuse and unauthorized access, disclosure, alteration and destruction.</p>
+            <h2 className="text-xl font-semibold text-white mb-3">Data Security</h2>
+            <p>We use industry-standard security practices to protect your personal information.</p>
+          </section>
+          <section>
+            <h2 className="text-xl font-semibold text-white mb-3">Third-Party Services</h2>
+            <p>The app may use trusted third-party services such as payment gateways, analytics providers, and cloud infrastructure.</p>
+          </section>
+          <section>
+            <h2 className="text-xl font-semibold text-white mb-3">User Rights</h2>
+            <p>Users may request correction or deletion of their personal information, subject to legal obligations.</p>
+          </section>
+          <section>
+            <h2 className="text-xl font-semibold text-white mb-3">Contact</h2>
+            <p>Email: support@goldbarpe.com</p>
           </section>
         </div>
       </motion.div>

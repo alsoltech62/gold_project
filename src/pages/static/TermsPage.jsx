@@ -18,17 +18,20 @@ export default function TermsPage() {
         </div>
 
         <div className="space-y-6 text-gray-300 leading-relaxed">
-          <section>
-            <h2 className="text-xl font-semibold text-white mb-3">1. Agreement to Terms</h2>
-            <p>By accessing or using our platform, you agree to be bound by these Terms and Conditions. If you disagree with any part of the terms, then you may not access the service.</p>
-          </section>
-          <section>
-            <h2 className="text-xl font-semibold text-white mb-3">2. Digital Gold and Silver</h2>
-            <p>The digital gold and silver purchased on our platform represent physical bullion stored securely. The live rates fluctuate based on market conditions.</p>
-          </section>
-          <section>
-            <h2 className="text-xl font-semibold text-white mb-3">3. Wallet and SIP</h2>
-            <p>Funds added to the INR Wallet can be used to purchase gold or silver. The SIP feature automates purchases based on your settings. All investments carry market risk.</p>
+          <p>By using GOLDBAR PE, you agree to the following:</p>
+          <ul className="list-disc pl-5 space-y-2">
+            <li>Users must provide accurate information.</li>
+            <li>Gold rates may change based on market conditions.</li>
+            <li>Gold purchases are processed according to applicable rates at the time of confirmation.</li>
+            <li>Physical delivery requests are subject to availability, verification, applicable charges, and company policies.</li>
+            <li>Users are responsible for maintaining account security.</li>
+            <li>Misuse of the application may result in suspension or termination.</li>
+            <li>GOLDBAR PE reserves the right to modify features, charges, or policies without prior notice where legally permitted.</li>
+            <li>These Terms shall be governed by the laws of India.</li>
+          </ul>
+          <section className="mt-6">
+            <h2 className="text-xl font-semibold text-white mb-3">Contact</h2>
+            <p>Support Email: support@goldbarpe.com</p>
           </section>
         </div>
       </motion.div>

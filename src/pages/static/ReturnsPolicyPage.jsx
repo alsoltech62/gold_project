@@ -19,16 +19,20 @@ export default function ReturnsPolicyPage() {
 
         <div className="space-y-6 text-gray-300 leading-relaxed">
           <section>
-            <h2 className="text-xl font-semibold text-white mb-3">1. Physical Delivery Returns</h2>
-            <p>Due to the nature of precious metals, physical delivery of gold and silver coins/bars cannot be returned once dispatched, unless the product is damaged or tampered with during transit.</p>
+            <h2 className="text-xl font-semibold text-white mb-3">Digital Gold Purchases</h2>
+            <p>Completed gold purchase transactions are generally non-refundable once successfully processed.</p>
           </section>
           <section>
-            <h2 className="text-xl font-semibold text-white mb-3">2. Digital Assets</h2>
-            <p>Digital gold and silver can be sold back to the platform at any time at the prevailing sell rate. We do not charge any hidden cancellation fees.</p>
+            <h2 className="text-xl font-semibold text-white mb-3">Physical Gold Delivery</h2>
+            <p>Delivery requests are processed according to applicable terms and may include handling, making, shipping, insurance, or other applicable charges.</p>
           </section>
           <section>
-            <h2 className="text-xl font-semibold text-white mb-3">3. Claim Process</h2>
-            <p>For any disputes regarding physical delivery, please raise a support ticket within 24 hours of delivery along with an unboxing video.</p>
+            <h2 className="text-xl font-semibold text-white mb-3">Failed Transactions</h2>
+            <p>If payment is deducted but the transaction is unsuccessful, the amount will be refunded according to the payment partner's processing timelines.</p>
+          </section>
+          <section>
+            <h2 className="text-xl font-semibold text-white mb-3">Cancellation</h2>
+            <p>Requests may be cancelled only if processing has not started and subject to company approval.</p>
           </section>
         </div>
       </motion.div>

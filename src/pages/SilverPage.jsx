@@ -10,7 +10,7 @@ export default function SilverPage() {
   const [amount, setAmount] = useState('');
   const [rate, setRate] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('UPI');
+  const [paymentMethod, setPaymentMethod] = useState('CASHFREE');
   const { user } = useAuth();
   const navigate = useNavigate();
   const [silverBalance, setSilverBalance] = useState(0);
@@ -36,7 +36,56 @@ export default function SilverPage() {
     }
     setLoading(true);
 
-    if (paymentMethod !== 'UPI') {
+    if (paymentMethod === 'CASHFREE') {
+      try {
+        const res = await api.post('/payment/create_order.php', { amount_inr: parseFloat(amount) });
+        if (res.data.success) {
+          const { payment_session_id, order_id } = res.data.data;
+          
+          const cashfree = window.Cashfree({ mode: "production" });
+          let checkoutOptions = {
+              paymentSessionId: payment_session_id,
+              redirectTarget: "_modal",
+          };
+          
+          cashfree.checkout(checkoutOptions).then(async (result) => {
+              if (result.error) {
+                  toast.error("Payment failed or cancelled.");
+                  setLoading(false);
+              }
+              if (result.paymentDetails) {
+                  try {
+                    const verifyRes = await api.post('/silver/buy.php', {
+                      amount_inr: parseFloat(amount),
+                      payment_method: 'CASHFREE',
+                      cashfree_order_id: order_id
+                    });
+                    if (verifyRes.data.success) {
+                      toast.success(`Successfully acquired ${formatGrams(verifyRes.data.data.silver_grams)} silver!`);
+                      setAmount('');
+                      setSilverBalance(prev => prev + verifyRes.data.data.silver_grams);
+                      setShowLockIn(true);
+                    } else {
+                      toast.error(verifyRes.data.message);
+                    }
+                  } catch (err) {
+                    toast.error('Verification failed.');
+                  }
+                  setLoading(false);
+              }
+          });
+        } else {
+          toast.error(res.data.message);
+          setLoading(false);
+        }
+      } catch (err) {
+        toast.error("Could not initiate payment.");
+        setLoading(false);
+      }
+      return;
+    }
+
+    if (paymentMethod !== 'UPI' && paymentMethod !== 'CASHFREE') {
       try {
         const res = await api.post('/silver/buy.php', {
           amount_inr: parseFloat(amount),
@@ -147,7 +196,8 @@ export default function SilverPage() {
                     onChange={e => setPaymentMethod(e.target.value)}
                     className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-4 text-sm font-bold text-white focus:outline-none focus:border-gray-300"
                   >
-                    <option value="UPI">Direct (UPI / Bank)</option>
+                    <option value="CASHFREE">Direct / UPI / Cards (Cashfree)</option>
+                    <option value="UPI">Manual UPI Transfer</option>
                     <option value="inr_wallet">INR Wallet Balance</option>
                     <option value="japsan_wallet">Japsan Wallet Balance</option>
                     <option value="gold_wallet">Gold Wallet (Sell Gold to Buy Silver)</option>

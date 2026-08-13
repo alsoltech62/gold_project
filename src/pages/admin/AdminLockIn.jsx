@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Lock, TrendingUp, AlertTriangle, Shield, Settings } from 'lucide-react';
+import { Lock, TrendingUp, AlertTriangle, Shield, Settings, Edit2, Trash2 } from 'lucide-react';
 import api, { formatGrams } from '../../utils/api';
 import { format } from 'date-fns';
 
@@ -33,6 +33,25 @@ export default function AdminLockIn() {
       }
     } catch (e) {
       alert('Failed to create plan');
+    }
+  };
+
+  const handleEditPlan = (plan) => {
+    setNewPlan(plan);
+    setIsCreating(true);
+  };
+
+  const handleDeletePlan = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this plan?')) return;
+    try {
+      const res = await api.delete(`/admin/lockin_plans.php?id=${id}`);
+      if (res.data.success) {
+        fetchStats();
+      } else {
+        alert(res.data.message);
+      }
+    } catch (e) {
+      alert('Failed to delete plan');
     }
   };
 
@@ -104,14 +123,24 @@ export default function AdminLockIn() {
             
             <div className="space-y-4">
               {data?.plans?.map((p, i) => (
-                <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10">
-                  <div>
-                    <p className="text-white font-bold text-sm">{p.months} Months ({p.plan_name || 'Basic'}) <span className={`text-[10px] px-2 py-0.5 rounded ml-2 uppercase ${p.metal_type === 'silver' ? 'bg-gray-500/20 text-gray-300' : 'bg-[#D4AF37]/20 text-[#D4AF37]'}`}>{p.metal_type || 'gold'}</span></p>
-                    <p className="text-white/40 text-[10px] uppercase tracking-widest mt-1">Min: ₹{p.min_investment} - Penalty: {p.penalty_percentage}%</p>
+                <div key={i} className="flex flex-col gap-2 p-4 rounded-xl bg-white/5 border border-white/10">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-white font-bold text-sm">{p.months} Months ({p.plan_name || 'Basic'}) <span className={`text-[10px] px-2 py-0.5 rounded ml-2 uppercase ${p.metal_type === 'silver' ? 'bg-gray-500/20 text-gray-300' : 'bg-[#D4AF37]/20 text-[#D4AF37]'}`}>{p.metal_type || 'gold'}</span></p>
+                      <p className="text-white/40 text-[10px] uppercase tracking-widest mt-1">Min: ₹{p.min_investment} - Penalty: {p.penalty_percentage}%</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-green-400 font-bold">+{p.return_percentage}%</p>
+                      <p className="text-white/40 text-[10px] uppercase tracking-widest mt-1">Extra Return</p>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-green-400 font-bold">+{p.return_percentage}%</p>
-                    <p className="text-white/40 text-[10px] uppercase tracking-widest mt-1">Extra Return</p>
+                  <div className="flex justify-end gap-2 mt-2">
+                    <button onClick={() => handleEditPlan(p)} className="p-2 hover:bg-white/10 rounded-lg transition-colors" title="Edit">
+                      <Edit2 size={16} className="text-blue-400" />
+                    </button>
+                    <button onClick={() => handleDeletePlan(p.id)} className="p-2 hover:bg-white/10 rounded-lg transition-colors" title="Delete">
+                      <Trash2 size={16} className="text-red-400" />
+                    </button>
                   </div>
                 </div>
               ))}
@@ -174,9 +203,9 @@ export default function AdminLockIn() {
                       className="w-full bg-[#111] border border-white/10 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-[#D4AF37]"
                     />
                   </div>
-                  <div className="flex gap-2">
-                    <button onClick={handleCreatePlan} className="flex-1 bg-[#D4AF37] text-black font-bold py-2 rounded-xl">Save</button>
-                    <button onClick={() => setIsCreating(false)} className="flex-1 bg-white/10 text-white font-bold py-2 rounded-xl">Cancel</button>
+                  <div className="flex gap-2 mt-4">
+                    <button onClick={handleCreatePlan} className="flex-1 bg-[#D4AF37] text-black font-bold py-2 rounded-xl">{newPlan.id ? 'Update' : 'Save'}</button>
+                    <button onClick={() => { setIsCreating(false); setNewPlan({ plan_name: '', months: '', return_percentage: '', min_investment: '', max_investment: '', penalty_percentage: '', metal_type: 'gold' }); }} className="flex-1 bg-white/10 text-white font-bold py-2 rounded-xl">Cancel</button>
                   </div>
                 </div>
               ) : (

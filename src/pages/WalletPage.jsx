@@ -61,6 +61,13 @@ export default function WalletPage() {
     e.preventDefault();
     if (!amount || parseFloat(amount) <= 0) return;
     setLoading(true);
+    if (walletType === 'japsan') {
+      window.open('https://japsanpay.com/', '_blank');
+      setLoading(false);
+      setAmount('');
+      return;
+    }
+    
     try {
       const res = await api.post('/user/deposit.php', { amount: parseFloat(amount), wallet_type: walletType });
       if (res.data.success) {

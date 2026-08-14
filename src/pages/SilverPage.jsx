@@ -200,7 +200,7 @@ export default function SilverPage() {
                     <option value="UPI">Manual UPI Transfer</option>
                     <option value="inr_wallet">INR Wallet Balance</option>
                     <option value="japsan_wallet">Japsan Wallet Balance</option>
-                    <option value="gold_wallet">Gold Wallet (Sell Gold to Buy Silver)</option>
+                    {/* <option value="gold_wallet">Gold Wallet (Sell Gold to Buy Silver)</option> */}
                   </select>
                 </div>
 

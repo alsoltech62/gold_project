@@ -9,6 +9,8 @@ export default function AdminNotificationsPage() {
   const { user } = useAuth();
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
+  const [image, setImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -20,16 +22,26 @@ export default function AdminNotificationsPage() {
 
     setLoading(true);
     try {
-      const response = await api.post('/admin/send_notification.php', { 
-        title, 
-        message, 
-        user_id: null 
+      const formData = new FormData();
+      formData.append('title', title);
+      formData.append('message', message);
+      if (image) {
+        formData.append('image', image);
+      }
+
+      const response = await api.post('/admin/send_notification.php', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
+      
       const data = response.data;
       if (data.success) {
         toast.success(data.message);
         setTitle('');
         setMessage('');
+        setImage(null);
+        setImagePreview('');
       } else {
         toast.error(data.message || 'Failed to send notification');
       }
@@ -37,6 +49,14 @@ export default function AdminNotificationsPage() {
       toast.error('Error sending notification');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImage(file);
+      setImagePreview(URL.createObjectURL(file));
     }
   };
 
@@ -72,6 +92,33 @@ export default function AdminNotificationsPage() {
               placeholder="Enter notification message..."
               required
             ></textarea>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-400 mb-2">
+              Notification Image (Optional)
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
+            />
+            {imagePreview && (
+              <div className="mt-4 relative rounded-xl overflow-hidden bg-black/50 border border-gray-700 aspect-[21/9]">
+                <img src={imagePreview} alt="Preview" className="w-full h-full object-contain" />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setImage(null);
+                    setImagePreview('');
+                  }}
+                  className="absolute top-2 right-2 bg-red-500/80 hover:bg-red-500 text-white rounded-full p-2 backdrop-blur-sm transition-colors"
+                >
+                  &times;
+                </button>
+              </div>
+            )}
           </div>
 
           <button

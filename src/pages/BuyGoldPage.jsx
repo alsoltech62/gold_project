@@ -186,7 +186,7 @@ export default function BuyGoldPage() {
                     <option value="UPI">Manual UPI Transfer</option>
                     <option value="inr_wallet">INR Wallet Balance</option>
                     <option value="japsan_wallet">Japsan Wallet Balance</option>
-                    <option value="silver_wallet">Silver Wallet (Sell Silver to Buy Gold)</option>
+                    {/* <option value="silver_wallet">Silver Wallet (Sell Silver to Buy Gold)</option> */}
                   </select>
                 </div>
               </div>

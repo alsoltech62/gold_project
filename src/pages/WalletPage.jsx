@@ -69,16 +69,44 @@ export default function WalletPage() {
     }
     
     try {
-      const res = await api.post('/user/deposit.php', { amount: parseFloat(amount), wallet_type: walletType });
-      if (res.data.success) {
-        toast.success('Deposit successful!');
-        setAmount('');
-        fetchDashboard();
-      } else {
-        toast.error(res.data.message);
+      if (walletType === 'inr') {
+        const orderRes = await api.post('/payment/create_order.php', { amount_inr: parseFloat(amount) });
+        if (orderRes.data.success) {
+          const { payment_url, order_id } = orderRes.data.data;
+          
+          const popup = window.open(payment_url, '_blank');
+          
+          const verifyPayment = async () => {
+            try {
+              const res = await api.post('/user/deposit.php', { 
+                amount: parseFloat(amount), 
+                wallet_type: walletType,
+                order_id: order_id
+              });
+              if (res.data.success) {
+                toast.success('Deposit successful!');
+                setAmount('');
+                fetchDashboard();
+              } else {
+                toast.error(res.data.message || 'Deposit verification failed');
+              }
+            } catch (err) {
+              toast.error('Deposit verification error');
+            }
+          };
+
+          const checkPopup = setInterval(() => {
+            if (!popup || popup.closed || popup.closed === undefined) {
+              clearInterval(checkPopup);
+              verifyPayment();
+            }
+          }, 1000);
+        } else {
+          toast.error(orderRes.data.message || 'Failed to create payment order');
+        }
       }
     } catch (err) {
-      toast.error('Deposit failed');
+      toast.error('Deposit process failed');
     }
     setLoading(false);
   };

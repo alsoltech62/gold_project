@@ -5,6 +5,7 @@ import api, { formatINR, formatGrams } from '../utils/api';
 
 export default function SellGoldPage() {
   const [grams, setGrams] = useState('');
+  const [upiId, setUpiId] = useState('');
   const [rate, setRate] = useState(null);
   const [balance, setBalance] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -19,17 +20,19 @@ export default function SellGoldPage() {
   const handleSell = async e => {
     e.preventDefault();
     if (!grams || parseFloat(grams) <= 0) { toast.error('Please enter a valid amount'); return; }
+    if (!upiId) { toast.error('Please enter your UPI ID for instant payout'); return; }
     if (parseFloat(grams) > balance) { toast.error('Insufficient gold balance in your vault'); return; }
     
     setLoading(true);
     try {
-      const res = await api.post('/gold/sell.php', { gold_grams: parseFloat(grams) });
+      const res = await api.post('/gold/sell.php', { gold_grams: parseFloat(grams), upi_id: upiId });
       if (res.data.success) {
-        toast.success('Sell request submitted! Funds will be credited after audit.', {
+        toast.success('Sell request submitted! Funds will be instantly credited to your UPI.', {
           icon: '💰',
           duration: 5000
         });
         setGrams('');
+        setUpiId('');
         // Refresh balance
         api.get('/user/dashboard.php').then(r => setBalance(r.data.data.total_gold_grams));
       } else {
@@ -80,6 +83,17 @@ export default function SellGoldPage() {
                     g
                   </div>
                 </div>
+                
+                <div className="pt-4">
+                  <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] mb-2 block">Payout UPI ID</label>
+                  <input
+                    type="text"
+                    value={upiId}
+                    onChange={e => setUpiId(e.target.value)}
+                    placeholder="yourname@upi"
+                    className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-4 text-sm font-bold text-white focus:outline-none focus:border-red-500"
+                  />
+                </div>
               </div>
 
               {estimated > 0 && (
@@ -94,8 +108,8 @@ export default function SellGoldPage() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-white/20 text-[10px] font-bold uppercase tracking-widest mb-1">Audit Status</p>
-                    <p className="text-white font-bold">Pending Approval</p>
+                    <p className="text-white/20 text-[10px] font-bold uppercase tracking-widest mb-1">Transfer Status</p>
+                    <p className="text-white font-bold">Instant Payout</p>
                   </div>
                 </div>
               )}
@@ -128,11 +142,7 @@ export default function SellGoldPage() {
                 <ul className="mt-2 space-y-2">
                   <li className="text-white/40 text-[10px] font-bold uppercase tracking-wider flex items-center gap-2">
                     <div className="w-1 h-1 rounded-full bg-[#D4AF37]"></div>
-                    Funds will be credited to your linked UPI/Bank account.
-                  </li>
-                  <li className="text-white/40 text-[10px] font-bold uppercase tracking-wider flex items-center gap-2">
-                    <div className="w-1 h-1 rounded-full bg-[#D4AF37]"></div>
-                    Audit process typically takes 2-4 business hours.
+                    Funds will be instantly credited to your provided UPI ID.
                   </li>
                   <li className="text-white/40 text-[10px] font-bold uppercase tracking-wider flex items-center gap-2">
                     <div className="w-1 h-1 rounded-full bg-[#D4AF37]"></div>

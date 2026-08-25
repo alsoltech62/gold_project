@@ -10,8 +10,9 @@ export default function BuyGoldPage() {
   const [amount, setAmount] = useState('');
   const [rate, setRate] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('CASHFREE');
+  const [paymentMethod, setPaymentMethod] = useState('RRFINCO');
   const [showUpiModal, setShowUpiModal] = useState(false);
+  const [showRRFINCOModal, setShowRRFINCOModal] = useState(false);
   const [showLockIn, setShowLockIn] = useState(false);
   const [utr, setUtr] = useState('');
   const { user } = useAuth();
@@ -31,43 +32,14 @@ export default function BuyGoldPage() {
 
     setLoading(true);
 
-    if (paymentMethod === 'CASHFREE') {
+    if (paymentMethod === 'RRFINCO') {
       try {
         const res = await api.post('/payment/create_order.php', { amount_inr: parseFloat(amount) });
         if (res.data.success) {
-          const { payment_session_id, order_id } = res.data.data;
-          
-          const cashfree = window.Cashfree({ mode: "production" });
-          let checkoutOptions = {
-              paymentSessionId: payment_session_id,
-              redirectTarget: "_modal",
-          };
-          
-          cashfree.checkout(checkoutOptions).then(async (result) => {
-              if (result.error) {
-                  toast.error("Payment failed or cancelled.");
-                  setLoading(false);
-              }
-              if (result.paymentDetails) {
-                  try {
-                    const verifyRes = await api.post('/gold/buy.php', {
-                      amount_inr: parseFloat(amount),
-                      payment_method: 'CASHFREE',
-                      cashfree_order_id: order_id
-                    });
-                    if (verifyRes.data.success) {
-                      toast.success(`Successfully acquired ${formatGrams(verifyRes.data.data.gold_grams)}!`, { icon: '✨' });
-                      setAmount('');
-                      setShowLockIn(true);
-                    } else {
-                      toast.error(verifyRes.data.message);
-                    }
-                  } catch (err) {
-                    toast.error('Verification failed.');
-                  }
-                  setLoading(false);
-              }
-          });
+          // Open RRFinco payment page in a new tab
+          window.open(res.data.data.payment_url, '_blank');
+          setUtr(res.data.data.order_id);
+          setShowRRFINCOModal(true);
         } else {
           toast.error(res.data.message);
           setLoading(false);
@@ -79,7 +51,7 @@ export default function BuyGoldPage() {
       return;
     }
 
-    if (paymentMethod !== 'UPI' && paymentMethod !== 'CASHFREE') {
+    if (paymentMethod !== 'UPI' && paymentMethod !== 'RRFINCO') {
       try {
         const res = await api.post('/gold/buy.php', {
           amount_inr: parseFloat(amount),
@@ -126,6 +98,29 @@ export default function BuyGoldPage() {
         setShowLockIn(true);
       } else {
         toast.error(res.data.message);
+      }
+    } catch (err) {
+      toast.error('Transaction failed.');
+    }
+    setLoading(false);
+  };
+
+  const verifyRRFINCO = async () => {
+    setLoading(true);
+    try {
+      const res = await api.post('/gold/buy.php', {
+        amount_inr: parseFloat(amount),
+        payment_method: 'RRFINCO',
+        payment_id: utr // order_id was saved here
+      });
+      if (res.data.success) {
+        toast.success(`Successfully acquired ${formatGrams(res.data.data.gold_grams)}!`, { icon: '✨' });
+        setAmount('');
+        setShowRRFINCOModal(false);
+        setUtr('');
+        setShowLockIn(true);
+      } else {
+        toast.error(res.data.message || 'Payment verification failed.');
       }
     } catch (err) {
       toast.error('Transaction failed.');
@@ -182,7 +177,7 @@ export default function BuyGoldPage() {
                     onChange={e => setPaymentMethod(e.target.value)}
                     className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-4 text-sm font-bold text-white focus:outline-none focus:border-[#D4AF37]"
                   >
-                    <option value="CASHFREE">Direct / UPI / Cards (Cashfree)</option>
+                    <option value="RRFINCO">Direct / UPI / Cards</option>
                     <option value="UPI">Manual UPI Transfer</option>
                     <option value="inr_wallet">INR Wallet Balance</option>
                     <option value="japsan_wallet">Japsan Wallet Balance</option>
@@ -340,6 +335,29 @@ export default function BuyGoldPage() {
               className="btn-gold w-full py-4 flex items-center justify-center font-bold"
             >
               {loading ? 'Verifying...' : 'Verify Payment'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showRRFINCOModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-[#111] border border-[#D4AF37]/30 rounded-2xl p-6 max-w-md w-full shadow-2xl relative">
+            <button 
+              onClick={() => setShowRRFINCOModal(false)}
+              className="absolute top-4 right-4 text-white/40 hover:text-white"
+            >
+              ✕
+            </button>
+            <h2 className="text-xl font-bold text-white mb-2">Payment Verification</h2>
+            <p className="text-white/60 text-sm mb-6">Did you complete the payment in the browser window?</p>
+            
+            <button
+              onClick={verifyRRFINCO}
+              disabled={loading}
+              className="btn-gold w-full py-4 flex items-center justify-center font-bold"
+            >
+              {loading ? 'Verifying...' : 'Yes, Check Status'}
             </button>
           </div>
         </div>

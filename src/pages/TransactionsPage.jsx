@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { History, Search, Download, Filter, ArrowUpRight, ArrowDownRight, Truck } from 'lucide-react';
+import { History, Search, Download, Filter, ArrowUpRight, ArrowDownRight, Truck, Lock, Wallet } from 'lucide-react';
 import api, { formatINR, formatGrams } from '../utils/api';
 import { format } from 'date-fns';
 
@@ -79,31 +79,59 @@ export default function TransactionsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
-                {filteredTxns.map(t => (
-                  <tr key={t.id} className="hover:bg-white/[0.01] transition-colors group">
-                    <td className="px-6 py-5">
-                      <div className="flex items-center gap-4">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${
-                          t.type === 'buy' ? 'bg-green-500/10 border-green-500/20 text-green-400' : 
-                          t.type === 'sell' ? 'bg-red-500/10 border-red-500/20 text-red-400' : 
-                          'bg-blue-500/10 border-blue-500/20 text-blue-400'
-                        }`}>
-                          {t.type === 'buy' ? <ArrowUpRight size={18} /> : t.type === 'sell' ? <ArrowDownRight size={18} /> : <Truck size={18} />}
+                {filteredTxns.map(t => {
+                  let title = `${t.type} Gold`;
+                  let icon = <Truck size={18} />;
+                  let colorClass = 'bg-blue-500/10 border-blue-500/20 text-blue-400';
+                  let gramsText = t.gold_grams ? formatGrams(t.gold_grams) : '-';
+                  let amountText = t.amount_inr ? formatINR(t.amount_inr) : '-';
+                  
+                  if (t.type === 'buy') {
+                    title = 'Acquired Gold';
+                    icon = <ArrowUpRight size={18} />;
+                    colorClass = 'bg-green-500/10 border-green-500/20 text-green-400';
+                    gramsText = `+${gramsText}`;
+                  } else if (t.type === 'sell') {
+                    if (t.notes && t.notes.toString().startsWith('Locked')) {
+                      title = 'Vault Lock-in';
+                      icon = <Lock size={18} />;
+                      colorClass = 'bg-purple-500/10 border-purple-500/20 text-purple-400';
+                      gramsText = 'Locked';
+                    } else {
+                      title = 'Sold Gold';
+                      icon = <ArrowDownRight size={18} />;
+                      colorClass = 'bg-red-500/10 border-red-500/20 text-red-400';
+                      gramsText = `-${gramsText}`;
+                    }
+                  } else if (t.type === 'deposit') {
+                    title = t.notes || 'Wallet Deposit';
+                    icon = <Wallet size={18} />;
+                    colorClass = 'bg-blue-500/10 border-blue-500/20 text-blue-400';
+                    gramsText = '---';
+                    amountText = t.amount_inr && parseFloat(t.amount_inr) > 0 ? `+${formatINR(t.amount_inr)}` : '---';
+                  }
+
+                  return (
+                    <tr key={t.id} className="hover:bg-white/[0.01] transition-colors group">
+                      <td className="px-6 py-5">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${colorClass}`}>
+                            {icon}
+                          </div>
+                          <div>
+                            <p className="text-white font-bold capitalize">{title}</p>
+                            <p className="text-white/20 text-[10px] font-bold uppercase tracking-widest mt-0.5">#{t.id.toString().padStart(6, '0')}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-white font-bold capitalize">{t.type} Gold</p>
-                          <p className="text-white/20 text-[10px] font-bold uppercase tracking-widest mt-0.5">#{t.id.toString().padStart(6, '0')}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-5">
-                      <p className="text-white font-black">{t.gold_grams ? formatGrams(t.gold_grams) : '-'}</p>
-                      <p className="text-white/30 text-[10px] font-bold uppercase tracking-widest mt-0.5">24K Pure Gold</p>
-                    </td>
-                    <td className="px-6 py-5">
-                      <p className="text-white font-bold">{t.amount_inr ? formatINR(t.amount_inr) : '-'}</p>
-                      <p className="text-white/30 text-[10px] font-bold uppercase tracking-widest mt-0.5">@{formatINR(t.gold_rate)}/g</p>
-                    </td>
+                      </td>
+                      <td className="px-6 py-5">
+                        <p className="text-white font-black">{gramsText}</p>
+                        <p className="text-white/30 text-[10px] font-bold uppercase tracking-widest mt-0.5">24K Pure Gold</p>
+                      </td>
+                      <td className="px-6 py-5">
+                        <p className="text-white font-bold">{amountText}</p>
+                        {t.gold_rate && <p className="text-white/30 text-[10px] font-bold uppercase tracking-widest mt-0.5">@{formatINR(t.gold_rate)}/g</p>}
+                      </td>
                     <td className="px-6 py-5">
                       <p className="text-white/60 text-xs font-bold">{format(new Date(t.created_at), 'dd MMM yyyy')}</p>
                       <p className="text-white/20 text-[10px] font-bold uppercase tracking-widest mt-0.5">{format(new Date(t.created_at), 'hh:mm a')}</p>
@@ -114,7 +142,8 @@ export default function TransactionsPage() {
                       </span>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>

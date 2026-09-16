@@ -86,7 +86,18 @@ export default function DashboardPage() {
   const pl = calculatedCurrentValue - totalInvested;
   const plPct = totalInvested > 0 ? ((pl / totalInvested) * 100).toFixed(2) : '0.00';
 
-  const getBannerUrl = url => url?.startsWith('http') ? url : `https://goldbarpe.com/${url}`;
+  const bannerList = Array.isArray(data?.banners) ? data.banners.filter(b => b && (b.image_url || b.imageUrl)) : [];
+  const currentBanner = bannerList[activeBanner] || bannerList[0] || null;
+
+  const getBannerUrl = (url) => {
+    if (!url || typeof url !== 'string') return '';
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url;
+    let cleanPath = url.replace(/^\/+/, '');
+    if (!cleanPath.startsWith('backend/')) {
+      cleanPath = 'backend/' + cleanPath;
+    }
+    return `https://goldbarpe.com/${cleanPath}`;
+  };
 
   const containerVariants = {
     hidden: {},
@@ -157,15 +168,24 @@ export default function DashboardPage() {
         <div className="xl:col-span-3 space-y-5">
 
       {/* ── BANNER CAROUSEL ── */}
-      {data?.banners?.length > 0 && (
+      {currentBanner && (
         <motion.div variants={itemVariants}
-          className="relative w-full overflow-hidden rounded-[24px] shadow-2xl"
+          className="relative w-full overflow-hidden rounded-[24px] shadow-2xl bg-[#121218]"
           style={{ aspectRatio: '16/7', border: '1px solid rgba(255,255,255,0.06)' }}>
           <AnimatePresence mode="wait">
             <motion.img
-              key={activeBanner}
-              src={getBannerUrl(data.banners[activeBanner].image_url)}
-              alt="Promo"
+              key={currentBanner.id || activeBanner}
+              src={getBannerUrl(currentBanner.image_url || currentBanner.imageUrl)}
+              alt="Promo Banner"
+              onError={(e) => {
+                const imgPath = currentBanner.image_url || currentBanner.imageUrl || '';
+                if (!e.currentTarget.dataset.retried && imgPath && !imgPath.startsWith('http')) {
+                  e.currentTarget.dataset.retried = 'true';
+                  e.currentTarget.src = `https://goldbarpe.com/backend/${imgPath.replace(/^\//, '')}`;
+                } else {
+                  e.currentTarget.style.display = 'none';
+                }
+              }}
               initial={{ opacity: 0, scale: 1.05 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.97 }}
@@ -174,9 +194,9 @@ export default function DashboardPage() {
             />
           </AnimatePresence>
           <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(2,2,4,0.6) 0%, transparent 60%)' }} />
-          {data.banners.length > 1 && (
+          {bannerList.length > 1 && (
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
-              {data.banners.map((_, i) => (
+              {bannerList.map((_, i) => (
                 <button key={i} onClick={() => setActiveBanner(i)}
                   className="rounded-full transition-all duration-400"
                   style={{ width: activeBanner === i ? 20 : 6, height: 6, background: activeBanner === i ? '#D4AF37' : 'rgba(255,255,255,0.35)' }} />

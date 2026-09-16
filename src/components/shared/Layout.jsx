@@ -174,6 +174,25 @@ export default function Layout({ isAdmin }) {
                 </NavLink>
               ))}
             </div>
+            <div className="px-1 mt-3">
+              <a
+                href="https://play.google.com/store/apps/details?id=com.japsan.goldbarpay"
+                target="_blank"
+                rel="noreferrer"
+                className="w-full flex items-center gap-2.5 py-2.5 px-3 rounded-xl bg-gradient-to-r from-black via-[#16140E] to-[#121218] border border-[#D4AF37]/30 hover:border-[#D4AF37] hover:scale-[1.02] active:scale-[0.98] transition-all group shadow-md"
+              >
+                <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 512 512">
+                  <path fill="#4285F4" d="M325.3 234.3L104.6 13l280.8 161.2-60.1 60.1z" />
+                  <path fill="#34A853" d="M47 38.6c-4.4 9.1-7 19.5-7 30.7v373.4c0 11.2 2.6 21.6 7 30.7l217.1-217.4L47 38.6z" />
+                  <path fill="#FBBC04" d="M385.4 337.8L104.6 499l220.7-221.3 60.1 60.1z" />
+                  <path fill="#EA4335" d="M488.5 241.7L385.4 182.2l-60.1 52.1 60.1 52.1 103.1-59.5c9.2-5.3 14.9-15.1 14.9-25.6s-5.7-20.3-14.9-25.6z" />
+                </svg>
+                <div className="text-left flex-1 min-w-0">
+                  <span className="block text-[8px] uppercase tracking-widest text-white/40 font-bold leading-none">GET IT ON</span>
+                  <span className="block text-xs font-bold text-white group-hover:text-[#D4AF37] transition-colors leading-tight">Google Play</span>
+                </div>
+              </a>
+            </div>
           </>
         )}
       </nav>

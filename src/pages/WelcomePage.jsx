@@ -21,9 +21,12 @@ import {
   BarChart3,
   Star,
   CheckCircle2,
-  Phone
+  Phone,
+  Smartphone,
+  Download
 } from 'lucide-react';
 import logo from '../assets/GoldBarPay.png';
+import AppDownloadPopup, { GooglePlayButton, PLAY_STORE_URL } from '../components/shared/AppDownloadPopup';
 
 export default function WelcomePage() {
   const navigate = useNavigate();
@@ -44,6 +47,8 @@ export default function WelcomePage() {
 
   return (
     <div className="min-h-screen bg-[#070707] text-[#e0e0e0] font-sans selection:bg-[#D4AF37] selection:text-black">
+      {/* ---------------- APP DOWNLOAD POPUP ---------------- */}
+      <AppDownloadPopup />
       
       {/* ---------------- NAVBAR ---------------- */}
       <nav className="flex items-center justify-between px-8 py-5 max-w-7xl mx-auto border-b border-white/5">
@@ -54,6 +59,9 @@ export default function WelcomePage() {
           <Link to="/" className="text-[#D4AF37] border-b-2 border-[#D4AF37] pb-1">Home</Link>
           <a href="#how-it-works" className="hover:text-white transition-colors">How It Works</a>
           <a href="#plans" className="hover:text-white transition-colors">Plans</a>
+          <a href="#app-download" className="hover:text-white transition-colors flex items-center gap-1.5 text-[#D4AF37]">
+            <Smartphone size={15} /> App
+          </a>
           <a href="#about" className="hover:text-white transition-colors">About Us</a>
           <a href="#why-gold" className="hover:text-white transition-colors">Why Gold</a>
           <a href="#reviews" className="hover:text-white transition-colors">Reviews</a>
@@ -85,7 +93,7 @@ export default function WelcomePage() {
           
           <h1 className="text-5xl lg:text-7xl font-serif leading-tight">
             START <span className="text-[#D4AF37] italic">GOLD</span><br/>
-            FROM <span className="font-sans font-medium tracking-tight">₹1000</span>
+            FROM <span className="font-sans font-medium tracking-tight">₹10</span>
           </h1>
           
           <p className="text-xl text-gray-400 max-w-md">
@@ -111,15 +119,18 @@ export default function WelcomePage() {
              </div>
           </div>
           
-          <div className="flex flex-col sm:flex-row items-center gap-6 pt-6">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-6">
             <button 
               onClick={() => navigate('/login')}
-              className="w-full sm:w-auto bg-gradient-to-r from-[#D4AF37] to-[#AA771C] text-black px-8 py-4 rounded font-bold flex items-center justify-center gap-2 hover:scale-105 transition-transform"
+              className="bg-gradient-to-r from-[#D4AF37] to-[#AA771C] text-black px-8 py-4 rounded font-bold flex items-center justify-center gap-2 hover:scale-105 transition-transform shadow-lg"
             >
               START GOLD SAVING NOW <ChevronRight size={20} />
             </button>
-            <a href="#" className="flex items-center gap-2 text-[#4ade80] hover:text-[#22c55e] transition-colors">
-              <Phone size={20} /> Or connect on WhatsApp
+            <GooglePlayButton />
+          </div>
+          <div className="pt-2">
+            <a href="https://wa.me/919033733550" target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-[#4ade80] hover:text-[#22c55e] transition-colors text-sm font-medium">
+              <Phone size={18} /> Or connect on WhatsApp
             </a>
           </div>
         </div>
@@ -378,8 +389,57 @@ export default function WelcomePage() {
         </div>
       </section>
 
+      {/* ---------------- APP DOWNLOAD SECTION ---------------- */}
+      <section id="app-download" className="max-w-7xl mx-auto px-8 py-20">
+        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-[#121218] via-[#1a1810] to-[#0d0d12] border border-[#D4AF37]/30 p-8 md:p-14 shadow-[0_20px_60px_rgba(0,0,0,0.8)]">
+          <div className="absolute -top-32 -right-32 w-80 h-80 bg-[#D4AF37]/15 rounded-full blur-3xl pointer-events-none" />
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-10 relative z-10">
+            <div className="flex-1 space-y-6 text-center lg:text-left">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#D4AF37] text-xs font-bold uppercase tracking-wider">
+                <Smartphone size={14} /> Android App Available
+              </div>
+              <h2 className="text-3xl md:text-5xl font-serif leading-tight">
+                Save & Trade Gold on the Go with <span className="text-[#D4AF37]">GoldBarPay App</span>
+              </h2>
+              <p className="text-gray-300 text-sm md:text-base max-w-xl leading-relaxed">
+                Download the official GoldBarPay Android App from Google Play Store. Enjoy live market rates, instant deposits, safe vault storage, and secure door deliveries right from your smartphone.
+              </p>
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-2">
+                <GooglePlayButton className="scale-105" />
+                <div className="flex items-center gap-2 text-xs text-gray-400 bg-white/5 border border-white/10 px-4 py-3 rounded-2xl">
+                  <Star size={16} className="text-[#D4AF37] fill-[#D4AF37]" />
+                  <span className="font-bold text-white">4.8 Rating</span> | <span>1,000+ Downloads</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex-shrink-0 flex items-center justify-center">
+              <div className="relative p-6 rounded-3xl bg-black/60 border border-white/10 backdrop-blur-md shadow-2xl flex flex-col items-center gap-4 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-[#D4AF37] to-[#AA771C] p-0.5">
+                  <div className="w-full h-full bg-black rounded-2xl flex items-center justify-center p-2">
+                    <img src={logo} alt="GoldBarPay" className="w-full h-full object-contain" />
+                  </div>
+                </div>
+                <div>
+                  <h4 className="font-bold text-white text-base">GoldBarPay</h4>
+                  <p className="text-xs text-[#D4AF37] font-medium">Official Mobile App</p>
+                </div>
+                <a
+                  href={PLAY_STORE_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-6 py-2.5 rounded-xl bg-[#D4AF37] text-black font-bold text-xs hover:bg-[#c49f2e] transition-colors flex items-center gap-2"
+                >
+                  <Download size={14} /> Install Now
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ---------------- BOTTOM CTA ---------------- */}
-      <section className="max-w-6xl mx-auto px-8 py-24">
+      <section className="max-w-6xl mx-auto px-8 py-16">
         <div className="bg-gradient-to-r from-[#15120a] to-[#0a0a0a] border border-[#D4AF37]/20 rounded-3xl p-12 flex flex-col md:flex-row items-center justify-between relative overflow-hidden">
           <div className="absolute top-0 right-0 w-1/2 h-full">
             <div className="absolute inset-0 bg-gradient-to-l from-transparent to-[#15120a] z-10"></div>
@@ -399,7 +459,7 @@ export default function WelcomePage() {
             >
               START NOW &rarr;
             </button>
-            <a href="#" className="flex items-center justify-center gap-2 text-[#4ade80] hover:text-[#22c55e] text-sm">
+            <a href="https://wa.me/919033733550" target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 text-[#4ade80] hover:text-[#22c55e] text-sm">
               <Phone size={16} /> Chat on WhatsApp
             </a>
           </div>
@@ -420,6 +480,12 @@ export default function WelcomePage() {
             <div className="md:col-span-2 space-y-6">
               <img src={logo} alt="Goldbar India" className="h-12" />
               <p className="text-xs text-gray-500 uppercase tracking-widest">TRUSTED GOLD. SECURE FUTURE.</p>
+              
+              {/* Google Play Store Badge in footer */}
+              <div className="pt-2">
+                <p className="text-xs text-white/50 mb-2 font-semibold">GET OUR MOBILE APP</p>
+                <GooglePlayButton />
+              </div>
             </div>
             
             <div>
@@ -443,8 +509,9 @@ export default function WelcomePage() {
             </div>
             
             <div>
-              <h5 className="font-bold mb-6 text-sm">SUPPORT</h5>
+              <h5 className="font-bold mb-6 text-sm">SUPPORT & APP</h5>
               <ul className="space-y-4 text-sm text-gray-400">
+                <li><a href={PLAY_STORE_URL} target="_blank" rel="noreferrer" className="text-[#D4AF37] font-semibold hover:underline flex items-center gap-1.5"><Download size={14} /> Android App</a></li>
                 <li><Link to="/support" className="hover:text-[#D4AF37]">Help Center</Link></li>
                 <li><a href="#" className="hover:text-[#D4AF37]">Track Delivery</a></li>
                 <li><a href="#" className="hover:text-[#D4AF37]">Payment Help</a></li>

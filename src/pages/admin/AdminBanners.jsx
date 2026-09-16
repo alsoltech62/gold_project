@@ -23,10 +23,12 @@ export default function AdminBanners() {
   }, []);
 
   const handleFileUpload = async (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (!file) return;
     
-    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+    const validExts = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+    const ext = file.name.split('.').pop()?.toLowerCase() || '';
+    if (!validExts.includes(ext) && !file.type.startsWith('image/')) {
       toast.error('Only JPG, PNG and WEBP images are allowed');
       return;
     }
@@ -46,9 +48,11 @@ export default function AdminBanners() {
         toast.error(res.data.message || 'Upload failed');
       }
     } catch (err) {
-      toast.error('Network error. Failed to upload.');
+      toast.error(err.response?.data?.message || 'Network error. Failed to upload banner.');
+    } finally {
+      setUploading(false);
+      e.target.value = '';
     }
-    setUploading(false);
   };
 
   const toggleStatus = async (id, currentStatus) => {
@@ -76,13 +80,15 @@ export default function AdminBanners() {
     }
   };
 
-  // Helper to resolve image URL if backend is on a different port/domain
-  // Currently api.defaults.baseURL is used for API, we can guess the root URL
+  // Helper to resolve image URL safely
   const getImageUrl = (path) => {
-    if (!path) return '';
-    if (path.startsWith('http')) return path;
-    const baseUrl = api.defaults.baseURL.replace('/api', '');
-    return `${baseUrl}/${path}`;
+    if (!path || typeof path !== 'string') return '';
+    if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) return path;
+    let cleanPath = path.replace(/^\/+/, '');
+    if (!cleanPath.startsWith('backend/')) {
+      cleanPath = 'backend/' + cleanPath;
+    }
+    return `https://goldbarpe.com/${cleanPath}`;
   };
 
   return (
@@ -96,12 +102,12 @@ export default function AdminBanners() {
         <div className="relative">
           <input 
             type="file" 
-            accept="image/jpeg, image/png, image/webp" 
+            accept="image/*" 
             onChange={handleFileUpload} 
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
             disabled={uploading}
           />
-          <button className="btn-gold flex items-center gap-2 px-6 py-3 w-full justify-center" disabled={uploading}>
+          <button className="btn-gold flex items-center gap-2 px-6 py-3 w-full justify-center shadow-lg" disabled={uploading}>
             {uploading ? <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin"></div> : <><Plus size={18} /> Upload New Banner</>}
           </button>
         </div>
@@ -120,9 +126,22 @@ export default function AdminBanners() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {banners.map(banner => (
-            <div key={banner.id} className={`relative group card-premium p-4 border overflow-hidden ${banner.is_active ? 'border-[#D4AF37]/30' : 'border-white/10 opacity-70'}`}>
-              <div className="aspect-[21/9] w-full rounded-xl overflow-hidden bg-black mb-4 relative">
-                <img src={getImageUrl(banner.image_url)} alt="Banner" className="w-full h-full object-cover" />
+            <div key={banner.id} className={`relative group card-premium p-4 border overflow-hidden transition-all duration-300 ${banner.is_active ? 'border-[#D4AF37]/30 shadow-[0_4px_20px_rgba(212,175,55,0.08)]' : 'border-white/10 opacity-70'}`}>
+              <div className="aspect-[21/9] w-full rounded-xl overflow-hidden bg-black/80 mb-4 relative flex items-center justify-center border border-white/5">
+                <img 
+                  src={getImageUrl(banner.image_url)} 
+                  alt="Banner" 
+                  className="w-full h-full object-cover" 
+                  onError={(e) => {
+                    // Try fallback path if backend prefix needed
+                    if (!e.currentTarget.dataset.retried && !banner.image_url.startsWith('http')) {
+                      e.currentTarget.dataset.retried = 'true';
+                      e.currentTarget.src = `https://goldbarpe.com/backend/${banner.image_url.replace(/^\//, '')}`;
+                    } else {
+                      e.currentTarget.style.opacity = '0.5';
+                    }
+                  }}
+                />
                 {!banner.is_active && (
                   <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-sm">
                     <span className="text-white/80 font-bold tracking-widest uppercase text-sm border border-white/20 px-3 py-1 rounded-lg">Inactive</span>
@@ -140,6 +159,7 @@ export default function AdminBanners() {
                 <button 
                   onClick={() => deleteBanner(banner.id)}
                   className="p-2 text-white/20 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
+                  title="Delete Banner"
                 >
                   <Trash2 size={18} />
                 </button>

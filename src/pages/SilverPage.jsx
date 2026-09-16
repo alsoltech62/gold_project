@@ -10,13 +10,13 @@ export default function SilverPage() {
   const [amount, setAmount] = useState('');
   const [rate, setRate] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('RRFINCO');
+  const [paymentMethod, setPaymentMethod] = useState('CASHFREE');
   const { user } = useAuth();
   const navigate = useNavigate();
   const [silverBalance, setSilverBalance] = useState(0);
   const [showLockIn, setShowLockIn] = useState(false);
   const [showUpiModal, setShowUpiModal] = useState(false);
-  const [showRRFINCOModal, setShowRRFINCOModal] = useState(false);
+  const [showCashfreeModal, setShowCashfreeModal] = useState(false);
   const [utr, setUtr] = useState('');
 
   useEffect(() => {
@@ -31,31 +31,31 @@ export default function SilverPage() {
   const buyGrams = rate && amount ? (parseFloat(amount) / rate.rate_per_gram) : 0;
 
   const handleBuy = async () => {
-    if (!amount || parseFloat(amount) < 100) {
-      toast.error('Minimum investment is ₹100');
+    if (!amount || parseFloat(amount) < 10) {
+      toast.error('Minimum investment is ₹10');
       return;
     }
     setLoading(true);
 
-    if (paymentMethod === 'RRFINCO') {
+    if (paymentMethod === 'CASHFREE') {
       try {
         const res = await api.post('/payment/create_order.php', { amount_inr: parseFloat(amount) });
         if (res.data.success) {
           window.open(res.data.data.payment_url, '_blank');
           setUtr(res.data.data.order_id);
-          setShowRRFINCOModal(true);
+          setShowCashfreeModal(true);
         } else {
-          toast.error(res.data.message);
+          toast.error(res.data.message || 'Failed to create Cashfree order');
           setLoading(false);
         }
       } catch (err) {
-        toast.error("Could not initiate payment.");
+        toast.error("Could not initiate Cashfree payment.");
         setLoading(false);
       }
       return;
     }
 
-    if (paymentMethod !== 'UPI' && paymentMethod !== 'RRFINCO') {
+    if (paymentMethod !== 'UPI' && paymentMethod !== 'CASHFREE') {
       try {
         const res = await api.post('/silver/buy.php', {
           amount_inr: parseFloat(amount),
@@ -111,19 +111,20 @@ export default function SilverPage() {
     setLoading(false);
   };
 
-  const verifyRRFINCO = async () => {
+  const verifyCashfree = async () => {
     setLoading(true);
     try {
       const res = await api.post('/silver/buy.php', {
         amount_inr: parseFloat(amount),
-        payment_method: 'RRFINCO',
+        payment_method: 'CASHFREE',
+        order_id: utr,
         payment_id: utr
       });
       if (res.data.success) {
         toast.success(`Successfully acquired ${formatGrams(res.data.data.silver_grams)} silver!`);
         setAmount('');
         setSilverBalance(prev => prev + res.data.data.silver_grams);
-        setShowRRFINCOModal(false);
+        setShowCashfreeModal(false);
         setUtr('');
         setShowLockIn(true);
       } else {
@@ -170,7 +171,7 @@ export default function SilverPage() {
                   </div>
                   
                   <div className="grid grid-cols-4 gap-3">
-                    {[500, 1000, 2000, 5000].map(amt => (
+                    {[10, 100, 500, 1000].map(amt => (
                       <button
                         key={amt}
                         type="button"
@@ -190,11 +191,10 @@ export default function SilverPage() {
                     onChange={e => setPaymentMethod(e.target.value)}
                     className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-4 text-sm font-bold text-white focus:outline-none focus:border-gray-300"
                   >
-                    <option value="RRFINCO">Direct / UPI / Cards</option>
+                    <option value="CASHFREE">Cashfree (UPI / Cards / NetBanking / Wallets)</option>
                     <option value="UPI">Manual UPI Transfer</option>
                     <option value="inr_wallet">INR Wallet Balance</option>
                     <option value="japsan_wallet">Japsan Wallet Balance</option>
-                    {/* <option value="gold_wallet">Gold Wallet (Sell Gold to Buy Silver)</option> */}
                   </select>
                 </div>
 
@@ -290,20 +290,20 @@ export default function SilverPage() {
         </div>
       )}
 
-      {showRRFINCOModal && (
+      {showCashfreeModal && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-[#111] border border-gray-300/30 rounded-2xl p-6 max-w-md w-full shadow-2xl relative">
             <button 
-              onClick={() => setShowRRFINCOModal(false)}
+              onClick={() => setShowCashfreeModal(false)}
               className="absolute top-4 right-4 text-white/40 hover:text-white"
             >
               ✕
             </button>
-            <h2 className="text-xl font-bold text-white mb-2">Payment Verification</h2>
-            <p className="text-white/60 text-sm mb-6">Did you complete the payment in the browser window?</p>
+            <h2 className="text-xl font-bold text-white mb-2">Cashfree Payment Verification</h2>
+            <p className="text-white/60 text-sm mb-6">Did you complete the payment in the Cashfree checkout window?</p>
             
             <button
-              onClick={verifyRRFINCO}
+              onClick={verifyCashfree}
               disabled={loading}
               className="w-full bg-gray-300 text-black font-bold py-4 rounded-xl flex items-center justify-center transition-colors"
             >

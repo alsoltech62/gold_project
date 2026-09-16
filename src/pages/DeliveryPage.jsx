@@ -96,6 +96,52 @@ export default function DeliveryPage() {
     setLoading(false);
   };
 
+  const processPaymentAndDelivery = async () => {
+    const totalCharge = charges.delivery_charge + charges.package_charge + charges.forwarding_charge;
+    if (totalCharge < 100) {
+      submitDelivery();
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const paymentRes = await api.post('/payment/create_order.php', { amount_inr: totalCharge });
+      if (paymentRes.data.success) {
+        const { payment_url } = paymentRes.data.data;
+        window.open(payment_url, '_blank');
+        
+        toast((t) => (
+          <div className="flex flex-col gap-3">
+            <p className="font-bold">Did you complete the payment?</p>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => { 
+                  toast.dismiss(t.id); 
+                  submitDelivery(); 
+                }} 
+                className="bg-[#D4AF37] text-black px-4 py-2 rounded font-bold hover:opacity-90"
+              >
+                Yes, Check Status
+              </button>
+              <button 
+                onClick={() => toast.dismiss(t.id)} 
+                className="bg-white/10 text-white px-4 py-2 rounded font-bold hover:bg-white/20"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ), { duration: Infinity, style: { background: '#111', color: '#fff', border: '1px solid #333' }});
+      } else {
+        toast.error(paymentRes.data.message || 'Could not initiate payment');
+      }
+    } catch (err) {
+      toast.error('Failed to connect to payment gateway');
+    }
+    setLoading(false);
+  };
+
+
   return (
     <div className="max-w-5xl mx-auto space-y-8">
       <header className="text-center md:text-left md:flex md:justify-between md:items-end">
@@ -301,7 +347,7 @@ export default function DeliveryPage() {
         secondaryActionText="Continue Delivery"
         onSecondaryAction={() => {
           setShowLockIn(false);
-          submitDelivery();
+          processPaymentAndDelivery();
         }}
         metalType={metalType}
       />

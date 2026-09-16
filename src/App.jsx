@@ -41,6 +41,8 @@ import NetworkDashboardPage from './pages/NetworkDashboardPage';
 import Layout from './components/shared/Layout';
 import PublicLayout from './components/shared/PublicLayout';
 import SplashScreen from './components/shared/SplashScreen';
+import AppDownloadPopup from './components/shared/AppDownloadPopup';
+import BottomAppBanner from './components/shared/BottomAppBanner';
 import { AnimatePresence, motion } from 'framer-motion';
 
 function PrivateRoute({ children }) {
@@ -64,6 +66,9 @@ function AppContent() {
       <Toaster position="top-right" toastOptions={{
         style: { background: '#1a1a1a', color: '#f5f5f5', border: '1px solid #d97706' }
       }} />
+
+      <AppDownloadPopup />
+      <BottomAppBanner />
 
       <AnimatePresence>
         {showSplash && (

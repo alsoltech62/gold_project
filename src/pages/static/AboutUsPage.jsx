@@ -63,9 +63,21 @@ export default function AboutUsPage() {
             <p className="mb-4">
               Our objective is to make gold ownership more convenient through technology while maintaining transparency, security, and customer-first service.
             </p>
-            <p>
+            <p className="mb-6">
               We focus on providing a simple user experience, clear transaction records, and responsive customer support.
             </p>
+            <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-1.5">
+              <p className="text-white font-medium">
+                <span className="text-gray-400">Owned By: </span>
+                <span className="text-amber-400 font-bold">Jaherkhabar media private limited</span>
+              </p>
+              <p className="text-gray-300 text-sm">
+                <span className="text-gray-400">Customer Care: </span>
+                <a href="mailto:support@goldbarpe.com" className="text-amber-400 hover:underline font-medium">
+                  support@goldbarpe.com
+                </a>
+              </p>
+            </div>
           </section>
         </div>
       </motion.div>

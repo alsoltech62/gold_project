@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Calendar, CheckCircle2, ChevronRight, ShieldCheck, Zap } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Calendar, CheckCircle2, ChevronRight, ShieldCheck, Zap, XCircle, ExternalLink, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 
@@ -15,8 +15,19 @@ export default function SipPage({ metalType = 'gold' }) {
   const [sipHistory, setSipHistory] = useState(null);
   const [plans, setPlans] = useState([]);
   const [selectedPlan, setSelectedPlan] = useState(null);
+  const [cancellingId, setCancellingId] = useState(null);
 
-  React.useEffect(() => {
+  const fetchSipData = () => {
+    api.get(`/user/sip_history.php?metal_type=${metalType}`)
+      .then(r => {
+        if (r.data.success) {
+          setSipHistory(r.data.data);
+        }
+      })
+      .catch(() => { });
+  };
+
+  useEffect(() => {
     api.get('/user/sip_plans.php')
       .then(r => {
         if (r.data.success) {
@@ -30,14 +41,8 @@ export default function SipPage({ metalType = 'gold' }) {
       })
       .catch(() => { });
 
-    api.get(`/user/sip_history.php?metal_type=${metalType}`)
-      .then(r => {
-        if (r.data.success) {
-          setSipHistory(r.data.data);
-        }
-      })
-      .catch(() => { });
-  }, []);
+    fetchSipData();
+  }, [metalType]);
 
   const handleSetupSip = async (e) => {
     e.preventDefault();
@@ -53,24 +58,132 @@ export default function SipPage({ metalType = 'gold' }) {
 
     setLoading(true);
     try {
-      const res = await api.post('/sip/setup.php', { amount, frequency, metal_type: metalType });
+      const res = await api.post('/sip/setup.php', { 
+        amount: parseFloat(amount), 
+        frequency, 
+        metal_type: metalType,
+        date,
+        day,
+        time
+      });
+
       if (res.data.success) {
-        toast.success('SIP Setup successfully!');
+        toast.success(res.data.message || 'SIP Setup successfully!');
+        const authLink = res.data.data?.auth_link;
+        
+        if (authLink) {
+          toast.loading('Redirecting to Cashfree Auto-Debit authorization...', { duration: 2500 });
+          setTimeout(() => {
+            window.location.href = authLink;
+          }, 1000);
+        } else {
+          fetchSipData();
+        }
       } else {
-        toast.error(res.data.message);
+        toast.error(res.data.message || 'Failed to setup SIP');
       }
     } catch (err) {
-      toast.error('Failed to setup SIP');
+      toast.error(err.response?.data?.message || 'Failed to setup SIP');
     }
     setLoading(false);
   };
 
+  const handleCancelSip = async (sipId) => {
+    if (!window.confirm('Are you sure you want to cancel this SIP and its Auto-Debit mandate?')) {
+      return;
+    }
+    setCancellingId(sipId);
+    try {
+      const res = await api.post('/user/cancel_sip.php', { sip_id: sipId });
+      if (res.data.success) {
+        toast.success('SIP and mandate cancelled successfully');
+        fetchSipData();
+      } else {
+        toast.error(res.data.message || 'Failed to cancel SIP');
+      }
+    } catch (err) {
+      toast.error('Failed to cancel SIP');
+    }
+    setCancellingId(null);
+  };
+
+  const activeSips = sipHistory?.active_sips || [];
+
   return (
-    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <header>
-        <h1 className="text-3xl font-black text-white tracking-tight">Setup {metalType === 'silver' ? 'Silver' : 'Gold'} SIP</h1>
-        <p className="text-white/40 text-sm font-medium mt-1">Automate your {metalType} accumulation journey</p>
+    <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-black text-white tracking-tight">
+            Setup {metalType === 'silver' ? 'Silver' : 'Gold'} SIP
+          </h1>
+          <p className="text-white/40 text-sm font-medium mt-1">
+            Automated Cashfree e-Mandate / Recurring SIP accumulation
+          </p>
+        </div>
+        <div className="flex items-center gap-2 bg-green-500/10 border border-green-500/30 px-3 py-1.5 rounded-full">
+          <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+          <span className="text-[11px] font-bold text-green-400 uppercase tracking-wider">Cashfree Auto-Debit Live</span>
+        </div>
       </header>
+
+      {/* Active SIPs Overview */}
+      {activeSips.length > 0 && (
+        <div className="space-y-4">
+          <h2 className="text-sm font-bold text-white/50 uppercase tracking-widest flex items-center gap-2">
+            <Zap className="text-green-400" size={16} /> Active Auto-Debit Mandates ({activeSips.length})
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {activeSips.map((sip) => (
+              <div 
+                key={sip.id}
+                className="bg-[#111] border border-green-500/30 rounded-2xl p-5 relative overflow-hidden shadow-lg"
+              >
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-green-500/20 text-green-400 uppercase tracking-wider">
+                      {sip.frequency}
+                    </span>
+                    <span className="ml-2 text-[10px] font-bold px-2 py-0.5 rounded bg-white/10 text-white/70 uppercase tracking-wider">
+                      {sip.metal_type || metalType}
+                    </span>
+                  </div>
+                  <span className="text-xs font-bold text-green-400 flex items-center gap-1">
+                    <CheckCircle2 size={13} /> {sip.mandate_status === 'ACTIVE' ? 'Mandate Active' : (sip.mandate_status || 'Active')}
+                  </span>
+                </div>
+
+                <div className="flex justify-between items-end">
+                  <div>
+                    <p className="text-white/40 text-xs">Recurring Amount</p>
+                    <p className="text-2xl font-black text-white">₹{sip.amount}</p>
+                    {sip.cf_subscription_id && (
+                      <p className="text-[10px] text-white/30 font-mono mt-1">ID: {sip.cf_subscription_id}</p>
+                    )}
+                  </div>
+
+                  <div className="flex gap-2">
+                    {sip.auth_link && sip.mandate_status === 'pending' && (
+                      <a
+                        href={sip.auth_link}
+                        className="text-xs bg-green-500 text-black font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 hover:bg-green-400"
+                      >
+                        Authorize <ExternalLink size={12} />
+                      </a>
+                    )}
+                    <button
+                      onClick={() => handleCancelSip(sip.id)}
+                      disabled={cancellingId === sip.id}
+                      className="text-xs bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 font-bold px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      {cancellingId === sip.id ? 'Cancelling...' : 'Cancel SIP'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
@@ -92,7 +205,7 @@ export default function SipPage({ metalType = 'gold' }) {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
                   {plans.map((plan) => (
                     <div
                       key={plan.id}
@@ -102,13 +215,13 @@ export default function SipPage({ metalType = 'gold' }) {
                         setFrequency(plan.frequency);
                       }}
                       className={`cursor-pointer p-4 rounded-xl border transition-all ${selectedPlan?.id === plan.id
-                          ? 'bg-green-500/10 border-green-500/50 text-green-400'
+                          ? 'bg-green-500/10 border-green-500/50 text-green-400 shadow-md shadow-green-500/10'
                           : 'bg-white/5 border-white/5 text-white/60 hover:border-green-500/30'
                         }`}
                     >
                       <p className="font-bold text-sm text-white">{plan.plan_name}</p>
                       <p className="text-[10px] uppercase tracking-widest mt-1 opacity-60">Min: ₹{plan.min_amount}</p>
-                      <p className="text-[10px] uppercase tracking-widest opacity-60">{plan.frequency}</p>
+                      <p className="text-[10px] uppercase tracking-widest text-green-400 font-bold mt-0.5">{plan.frequency}</p>
                     </div>
                   ))}
                 </div>
@@ -116,8 +229,9 @@ export default function SipPage({ metalType = 'gold' }) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
                   <div className="space-y-2">
                     <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Selected Frequency</label>
-                    <div className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-4 text-sm font-bold text-white capitalize">
-                      {frequency}
+                    <div className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-4 text-sm font-bold text-white capitalize flex items-center justify-between">
+                      <span>{frequency}</span>
+                      <span className="text-xs text-green-400 font-normal">Cashfree Recurring</span>
                     </div>
                   </div>
                   <div className="space-y-2">
@@ -184,9 +298,9 @@ export default function SipPage({ metalType = 'gold' }) {
                   <ShieldCheck className="text-green-400" size={24} />
                 </div>
                 <div>
-                  <h4 className="text-green-400 font-bold mb-1">Auto-Debit Authorization</h4>
+                  <h4 className="text-green-400 font-bold mb-1">Cashfree Auto-Debit Mandate Authorization</h4>
                   <p className="text-green-400/60 text-xs leading-relaxed">
-                    By proceeding, you authorize us to deduct ₹{amount || 0} from your linked payment method {frequency === 'daily' ? `daily at ${time}` : frequency === 'weekly' ? `every ${day}` : frequency === 'monthly' ? `on the ${date}th of every month` : `yearly on ${monthDate}`}. You can pause or cancel your SIP at any time without penalty.
+                    By proceeding, you authorize Cashfree to set up an e-Mandate/UPI Autopay for ₹{amount || 0} {frequency === 'daily' ? `daily at ${time}` : frequency === 'weekly' ? `every ${day}` : frequency === 'monthly' ? `on the ${date}th of every month` : `yearly on ${monthDate}`}. Amount will automatically buy and credit pure {metalType} to your digital vault. You can cancel anytime.
                   </p>
                 </div>
               </div>
@@ -194,9 +308,9 @@ export default function SipPage({ metalType = 'gold' }) {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-green-500 hover:bg-green-400 text-black font-black flex items-center justify-center gap-3 py-5 rounded-2xl text-lg shadow-[0_20px_40px_rgba(34,197,94,0.2)] transition-all disabled:opacity-50"
+                className="w-full bg-green-500 hover:bg-green-400 text-black font-black flex items-center justify-center gap-3 py-5 rounded-2xl text-lg shadow-[0_20px_40px_rgba(34,197,94,0.2)] transition-all disabled:opacity-50 cursor-pointer"
               >
-                {loading ? 'Setting up...' : 'Setup Auto-Pay & Start SIP'}
+                {loading ? 'Setting up Auto-Pay...' : 'Authorize Auto-Debit & Start SIP'}
                 {!loading && <ChevronRight size={20} />}
               </button>
             </form>
@@ -218,15 +332,15 @@ export default function SipPage({ metalType = 'gold' }) {
               <li className="flex items-start gap-3">
                 <CheckCircle2 className="text-green-400 shrink-0 mt-0.5" size={16} />
                 <div>
-                  <p className="text-white text-sm font-bold">Discipline</p>
-                  <p className="text-white/40 text-[10px] mt-1">Build long term wealth effortlessly</p>
+                  <p className="text-white text-sm font-bold">Hands-Free Discipline</p>
+                  <p className="text-white/40 text-[10px] mt-1">Automated e-Mandate cuts balance dynamically</p>
                 </div>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle2 className="text-green-400 shrink-0 mt-0.5" size={16} />
                 <div>
-                  <p className="text-white text-sm font-bold">Flexibility</p>
-                  <p className="text-white/40 text-[10px] mt-1">Pause, modify or stop anytime</p>
+                  <p className="text-white text-sm font-bold">Complete Flexibility</p>
+                  <p className="text-white/40 text-[10px] mt-1">Pause or cancel your mandate anytime with zero penalty</p>
                 </div>
               </li>
             </ul>
@@ -234,7 +348,16 @@ export default function SipPage({ metalType = 'gold' }) {
 
           {sipHistory && (
             <div className="card-premium border-white/5 p-6 bg-[#0F0F0F]">
-              <h3 className="text-white font-bold mb-4">SIP Installment Monitoring</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-white font-bold text-sm">SIP Installment Monitoring</h3>
+                <button 
+                  onClick={fetchSipData}
+                  className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white/50 hover:text-white"
+                  title="Refresh"
+                >
+                  <RefreshCw size={14} />
+                </button>
+              </div>
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className="p-4 bg-white/5 rounded-xl border border-white/5">
                   <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mb-1">Total Invested</p>
@@ -245,10 +368,10 @@ export default function SipPage({ metalType = 'gold' }) {
                   <p className="text-xl font-black text-green-400">{sipHistory.total_gold}g</p>
                 </div>
               </div>
-              <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mb-3">Recent Installments</p>
+              <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mb-3">Recent Auto-Debited Installments</p>
               <div className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar pr-2">
-                {sipHistory.history.length === 0 ? (
-                  <p className="text-white/30 text-xs italic">No SIP installments yet.</p>
+                {!sipHistory.history || sipHistory.history.length === 0 ? (
+                  <p className="text-white/30 text-xs italic py-2">No SIP installments deducted yet.</p>
                 ) : sipHistory.history.map((txn, i) => (
                   <div key={i} className="flex justify-between items-center p-3 bg-white/5 rounded-lg border border-white/5 hover:bg-white/10 transition-colors">
                     <div>

@@ -34,7 +34,7 @@ export default function BuyGoldPage() {
 
     if (paymentMethod === 'CASHFREE') {
       try {
-        const res = await api.post('/payment/create_order.php', { amount_inr: parseFloat(amount) });
+        const res = await api.post('/payment/create_order.php', { amount_inr: parseFloat(amount), metal_type: 'gold' });
         if (res.data.success) {
           // Open Cashfree hosted payment page in a new tab
           window.open(res.data.data.payment_url, '_blank');
@@ -375,3 +375,4 @@ export default function BuyGoldPage() {
     </div>
   );
 }
+

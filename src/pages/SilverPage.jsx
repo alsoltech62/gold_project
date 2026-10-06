@@ -39,7 +39,7 @@ export default function SilverPage() {
 
     if (paymentMethod === 'CASHFREE') {
       try {
-        const res = await api.post('/payment/create_order.php', { amount_inr: parseFloat(amount) });
+        const res = await api.post('/payment/create_order.php', { amount_inr: parseFloat(amount), metal_type: 'silver' });
         if (res.data.success) {
           window.open(res.data.data.payment_url, '_blank');
           setUtr(res.data.data.order_id);
@@ -325,3 +325,4 @@ export default function SilverPage() {
     </div>
   );
 }
+

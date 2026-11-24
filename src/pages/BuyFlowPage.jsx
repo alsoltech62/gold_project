@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, Calendar, ArrowRight } from 'lucide-react';
+import { ShoppingCart, Calendar, ArrowRight, Gift } from 'lucide-react';
 
 export default function BuyFlowPage() {
   const [metal, setMetal] = useState('gold');
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <header className="text-center">
         <h1 className="text-4xl font-black text-white tracking-tight mb-2">Buy Metal</h1>
         <p className="text-white/40 text-sm font-medium">Choose your preferred investment method</p>
@@ -29,7 +29,7 @@ export default function BuyFlowPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
+      <div className={`grid grid-cols-1 ${metal === 'gold' ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-8 mt-12`}>
         <Link to={metal === 'gold' ? "/buy/one-time" : "/silver"} className={`card-premium group transition-all p-8 flex flex-col items-center gap-6 text-center relative overflow-hidden ${metal === 'gold' ? 'hover:border-[#D4AF37]/50' : 'hover:border-gray-400/50'}`}>
           <div className={`absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none transition-colors ${metal === 'gold' ? 'bg-[#D4AF37]/5 group-hover:bg-[#D4AF37]/10' : 'bg-gray-400/5 group-hover:bg-gray-400/10'}`}></div>
           <div className={`w-20 h-20 rounded-3xl flex items-center justify-center group-hover:scale-110 transition-all duration-500 ${metal === 'gold' ? 'bg-gradient-to-br from-[#D4AF37]/20 to-transparent text-[#D4AF37] group-hover:shadow-[0_0_30px_rgba(212,175,55,0.3)]' : 'bg-gradient-to-br from-gray-400/20 to-transparent text-gray-400 group-hover:shadow-[0_0_30px_rgba(156,163,175,0.3)]'}`}>
@@ -43,6 +43,23 @@ export default function BuyFlowPage() {
             Continue <ArrowRight size={16} />
           </div>
         </Link>
+
+        {metal === 'gold' && (
+          <Link to="/buy/gift" className="card-premium group transition-all p-8 flex flex-col items-center gap-6 text-center relative overflow-hidden hover:border-[#D4AF37]/50 border-[#D4AF37]/20">
+            <div className="absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none bg-[#D4AF37]/10 group-hover:bg-[#D4AF37]/20 transition-colors"></div>
+            <div className="w-20 h-20 rounded-3xl flex items-center justify-center group-hover:scale-110 transition-all duration-500 bg-gradient-to-br from-[#D4AF37]/30 to-transparent text-[#D4AF37] group-hover:shadow-[0_0_30px_rgba(212,175,55,0.4)]">
+              <Gift size={32} />
+            </div>
+            <div>
+              <div className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#D4AF37]/20 text-[#D4AF37] mb-2 border border-[#D4AF37]/30">New Feature</div>
+              <h2 className="text-2xl font-black text-white mb-2">Gift Gold 🎁</h2>
+              <p className="text-white/40 text-sm leading-relaxed mb-6">Gift 24K pure digital gold to your friends and loved ones with a personalized greeting & claim link.</p>
+            </div>
+            <div className="mt-auto flex items-center gap-2 font-bold text-sm uppercase tracking-widest text-[#D4AF37] group-hover:gap-4 transition-all">
+              Gift Now <ArrowRight size={16} />
+            </div>
+          </Link>
+        )}
 
         <Link to={metal === 'gold' ? "/buy/sip" : "/silver/sip"} className={`card-premium group transition-all p-8 flex flex-col items-center gap-6 text-center relative overflow-hidden ${metal === 'gold' ? 'hover:border-[#D4AF37]/50' : 'hover:border-gray-400/50'}`}>
           <div className={`absolute top-0 left-0 w-64 h-64 rounded-full blur-3xl -ml-32 -mt-32 pointer-events-none transition-colors ${metal === 'gold' ? 'bg-[#D4AF37]/5 group-hover:bg-[#D4AF37]/10' : 'bg-gray-400/5 group-hover:bg-gray-400/10'}`}></div>

@@ -1,9 +1,116 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, CheckCircle2, ChevronRight, ShieldCheck, Zap, XCircle, ExternalLink, RefreshCw } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { 
+  Calendar, CheckCircle2, ChevronRight, ShieldCheck, Zap, XCircle, ExternalLink, RefreshCw,
+  Clock, Sparkles, ArrowRight, Shield, Layers
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 
 export default function SipPage({ metalType = 'gold' }) {
+  const navigate = useNavigate();
+  const isSilver = metalType === 'silver';
+
+  // =========================================================================
+  // SIP COMING SOON UI (ACTIVE)
+  // =========================================================================
+  return (
+    <div className="max-w-4xl mx-auto py-6 sm:py-12 px-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-[#181818] via-[#121212] to-[#0d0d0d] p-6 sm:p-12 shadow-2xl text-center">
+        {/* Ambient Glow */}
+        <div 
+          className="absolute -top-32 left-1/2 -translate-x-1/2 w-80 h-80 rounded-full blur-[110px] pointer-events-none opacity-40"
+          style={{ background: isSilver ? '#C0C0C0' : '#D4AF37' }}
+        />
+
+        {/* Status Badge */}
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md mb-6">
+          <Clock className={isSilver ? "text-slate-300 animate-spin-slow" : "text-[#D4AF37]"} size={15} />
+          <span className={`text-xs font-bold uppercase tracking-widest ${isSilver ? "text-slate-300" : "text-[#D4AF37]"}`}>
+            Coming Soon
+          </span>
+        </div>
+
+        {/* Feature Icon */}
+        <div className="relative mx-auto w-24 h-24 mb-6 flex items-center justify-center">
+          <div 
+            className="absolute inset-0 rounded-3xl opacity-20 blur-lg animate-pulse"
+            style={{ background: isSilver ? 'linear-gradient(135deg, #94a3b8, #e2e8f0)' : 'linear-gradient(135deg, #B08D57, #F59E0B)' }}
+          />
+          <div 
+            className="relative w-full h-full rounded-3xl flex items-center justify-center border shadow-xl"
+            style={{
+              background: 'linear-gradient(145deg, #1f1f1f, #141414)',
+              borderColor: isSilver ? 'rgba(203, 213, 225, 0.3)' : 'rgba(212, 175, 55, 0.4)'
+            }}
+          >
+            <Sparkles className={isSilver ? "text-slate-200" : "text-[#D4AF37]"} size={44} />
+          </div>
+        </div>
+
+        {/* Heading & Subtitle */}
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight mb-3">
+          {isSilver ? 'Silver' : 'Gold'} SIP is <span className={isSilver ? "text-slate-300" : "text-[#D4AF37]"}>Coming Soon</span>
+        </h1>
+        <p className="text-white/60 max-w-xl mx-auto text-sm sm:text-base leading-relaxed mb-8">
+          We are upgrading our Systematic Investment Plan (SIP) engine to deliver seamless automated micro-savings, instant bank mandates, and zero-fee recurring bullion accumulation.
+        </p>
+
+        {/* Feature Preview Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 text-left max-w-2xl mx-auto">
+          <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-white/10 transition-colors">
+            <div className="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center mb-3">
+              <Calendar className={isSilver ? "text-slate-300" : "text-[#D4AF37]"} size={18} />
+            </div>
+            <h3 className="text-white text-sm font-bold mb-1">Flexible Frequency</h3>
+            <p className="text-white/40 text-xs">Set daily, weekly, or monthly auto-investments that match your budget.</p>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-white/10 transition-colors">
+            <div className="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center mb-3">
+              <ShieldCheck className="text-emerald-400" size={18} />
+            </div>
+            <h3 className="text-white text-sm font-bold mb-1">100% Insured 24K</h3>
+            <p className="text-white/40 text-xs">Every rupee accumulated is backed by physical certified bullion in vaults.</p>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-white/10 transition-colors">
+            <div className="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center mb-3">
+              <Zap className="text-yellow-400" size={18} />
+            </div>
+            <h3 className="text-white text-sm font-bold mb-1">Auto-Debit Mandate</h3>
+            <p className="text-white/40 text-xs">Seamless Cashfree UPI & bank e-mandate for automated deductions.</p>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="w-full sm:w-auto px-6 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold text-sm transition-all hover:bg-white/10"
+          >
+            Back to Dashboard
+          </button>
+          <button
+            onClick={() => navigate(isSilver ? '/silver' : '/buy/one-time')}
+            className="w-full sm:w-auto px-6 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-lg hover:opacity-90 active:scale-95"
+            style={{
+              backgroundColor: isSilver ? '#C0C0C0' : '#D4AF37',
+              color: '#000'
+            }}
+          >
+            <span>Buy {isSilver ? 'Silver' : 'Gold'} Instantly</span>
+            <ArrowRight size={16} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  /*
+  ==============================================================================
+  ORIGINAL SIP PAGE IMPLEMENTATION (COMMENTED OUT TEMPORARILY - NOT REMOVED)
+  ==============================================================================
   const [amount, setAmount] = useState('1000');
   const [frequency, setFrequency] = useState('monthly');
   const [date, setDate] = useState('1');
@@ -107,7 +214,9 @@ export default function SipPage({ metalType = 'gold' }) {
     setCancellingId(null);
   };
 
-  const activeSips = sipHistory?.active_sips || [];
+  const activeSips = (sipHistory?.active_sips || []).filter(
+    (sip) => sip.status === 'active' || ['ACTIVE', 'SUCCESS', 'ON_DEMAND'].includes(String(sip.mandate_status).toUpperCase())
+  );
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -126,61 +235,102 @@ export default function SipPage({ metalType = 'gold' }) {
         </div>
       </header>
 
-      {/* Active SIPs Overview */}
+      {/* Active & Recent Mandates Overview * /}
       {activeSips.length > 0 && (
         <div className="space-y-4">
-          <h2 className="text-sm font-bold text-white/50 uppercase tracking-widest flex items-center gap-2">
-            <Zap className="text-green-400" size={16} /> Active Auto-Debit Mandates ({activeSips.length})
-          </h2>
+          <div className="flex justify-between items-center">
+            <h2 className="text-sm font-bold text-white/50 uppercase tracking-widest flex items-center gap-2">
+              <Zap className="text-green-400" size={16} /> Auto-Debit Mandates ({activeSips.length})
+            </h2>
+            <a 
+              href="https://goldbarpe.com/backend/api/debug/logs.php?channel=sip_cashfree" 
+              target="_blank" 
+              rel="noreferrer"
+              className="text-[11px] font-bold text-[#D4AF37] hover:underline flex items-center gap-1"
+            >
+              View Mandate Logs <ExternalLink size={12} />
+            </a>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {activeSips.map((sip) => (
-              <div 
-                key={sip.id}
-                className="bg-[#111] border border-green-500/30 rounded-2xl p-5 relative overflow-hidden shadow-lg"
-              >
-                <div className="flex justify-between items-start mb-3">
-                  <div>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-green-500/20 text-green-400 uppercase tracking-wider">
-                      {sip.frequency}
-                    </span>
-                    <span className="ml-2 text-[10px] font-bold px-2 py-0.5 rounded bg-white/10 text-white/70 uppercase tracking-wider">
-                      {sip.metal_type || metalType}
-                    </span>
-                  </div>
-                  <span className="text-xs font-bold text-green-400 flex items-center gap-1">
-                    <CheckCircle2 size={13} /> {sip.mandate_status === 'ACTIVE' ? 'Mandate Active' : (sip.mandate_status || 'Active')}
-                  </span>
-                </div>
+            {activeSips.map((sip) => {
+              const isMandateActive = ['ACTIVE', 'SUCCESS', 'ON_DEMAND'].includes(String(sip.mandate_status).toUpperCase());
+              const isRejected = ['REJECTED', 'FAILED', 'CANCELLED', 'DECLINED'].includes(String(sip.mandate_status).toUpperCase()) || Boolean(sip.failure_reason);
 
-                <div className="flex justify-between items-end">
-                  <div>
-                    <p className="text-white/40 text-xs">Recurring Amount</p>
-                    <p className="text-2xl font-black text-white">₹{sip.amount}</p>
-                    {sip.cf_subscription_id && (
-                      <p className="text-[10px] text-white/30 font-mono mt-1">ID: {sip.cf_subscription_id}</p>
-                    )}
+              return (
+                <div 
+                  key={sip.id}
+                  className={`bg-[#111] border rounded-2xl p-5 relative overflow-hidden shadow-lg ${
+                    isMandateActive ? 'border-green-500/30' : isRejected ? 'border-red-500/30 bg-red-950/10' : 'border-yellow-500/30'
+                  }`}
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${
+                        isMandateActive ? 'bg-green-500/20 text-green-400' : isRejected ? 'bg-red-500/20 text-red-400' : 'bg-yellow-500/20 text-yellow-400'
+                      }`}>
+                        {sip.frequency}
+                      </span>
+                      <span className="ml-2 text-[10px] font-bold px-2 py-0.5 rounded bg-white/10 text-white/70 uppercase tracking-wider">
+                        {sip.metal_type || metalType}
+                      </span>
+                    </div>
+                    <span className={`text-xs font-bold flex items-center gap-1 ${
+                      isMandateActive ? 'text-green-400' : isRejected ? 'text-red-400' : 'text-yellow-400'
+                    }`}>
+                      {isMandateActive ? <CheckCircle2 size={13} /> : isRejected ? <XCircle size={13} /> : <Zap size={13} />}
+                      {isMandateActive ? 'Mandate Active' : isRejected ? `Declined (${sip.mandate_status || 'Failed'})` : (sip.mandate_status || 'Pending')}
+                    </span>
                   </div>
 
-                  <div className="flex gap-2">
-                    {sip.auth_link && sip.mandate_status === 'pending' && (
-                      <a
-                        href={sip.auth_link}
-                        className="text-xs bg-green-500 text-black font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 hover:bg-green-400"
-                      >
-                        Authorize <ExternalLink size={12} />
-                      </a>
-                    )}
-                    <button
-                      onClick={() => handleCancelSip(sip.id)}
-                      disabled={cancellingId === sip.id}
-                      className="text-xs bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 font-bold px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
-                    >
-                      {cancellingId === sip.id ? 'Cancelling...' : 'Cancel SIP'}
-                    </button>
+                  {/* Failure / Rejection Reason Callout * /}
+                  {(sip.failure_reason || sip.last_error) && (
+                    <div className="mb-3 p-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-left">
+                      <p className="text-[11px] font-bold text-red-400 flex items-center gap-1">
+                        ⚠️ Rejection Reason:
+                      </p>
+                      <p className="text-xs text-red-200 mt-0.5 font-mono">
+                        {sip.failure_reason || sip.last_error}
+                      </p>
+                      {String(sip.failure_reason || sip.last_error).toUpperCase().includes('RISK') && (
+                        <p className="text-[10px] text-white/50 mt-1">
+                          Merchant / Bank limit exceeded. Please check with your bank.
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="flex justify-between items-end">
+                    <div>
+                      <p className="text-white/40 text-xs">Recurring Amount</p>
+                      <p className="text-2xl font-black text-white">₹{sip.amount}</p>
+                      {sip.cf_subscription_id && (
+                        <p className="text-[10px] text-white/30 font-mono mt-1">ID: {sip.cf_subscription_id}</p>
+                      )}
+                    </div>
+
+                    <div className="flex gap-2">
+                      {sip.auth_link && (sip.mandate_status === 'pending' || isRejected) && (
+                        <a
+                          href={sip.auth_link}
+                          className="text-xs bg-green-500 text-black font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 hover:bg-green-400"
+                        >
+                          {isRejected ? 'Retry Mandate' : 'Authorize'} <ExternalLink size={12} />
+                        </a>
+                      )}
+                      {sip.status === 'active' && (
+                        <button
+                          onClick={() => handleCancelSip(sip.id)}
+                          disabled={cancellingId === sip.id}
+                          className="text-xs bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 font-bold px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                        >
+                          {cancellingId === sip.id ? 'Cancelling...' : 'Cancel SIP'}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -391,4 +541,5 @@ export default function SipPage({ metalType = 'gold' }) {
       </div>
     </div>
   );
+  */
 }

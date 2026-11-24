@@ -9,6 +9,8 @@ import DashboardPage from './pages/DashboardPage';
 import TransactionsPage from './pages/TransactionsPage';
 import BuyFlowPage from './pages/BuyFlowPage';
 import BuyGoldPage from './pages/BuyGoldPage';
+import GiftGoldPage from './pages/GiftGoldPage';
+import ClaimGiftPage from './pages/ClaimGiftPage';
 import SipPage from './pages/SipPage';
 import SellFlowPage from './pages/SellFlowPage';
 import SellGoldPage from './pages/SellGoldPage';
@@ -80,12 +82,14 @@ function AppContent() {
         <Route path="/welcome" element={<WelcomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
+        <Route path="/claim-gift" element={<ClaimGiftPage />} />
 
         <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="buy" element={<BuyFlowPage />} />
           <Route path="buy/one-time" element={<BuyGoldPage />} />
+          <Route path="buy/gift" element={<GiftGoldPage />} />
           <Route path="buy/sip" element={<SipPage metalType="gold" />} />
           <Route path="silver/sip" element={<SipPage metalType="silver" />} />
           <Route path="sell" element={<SellFlowPage />} />

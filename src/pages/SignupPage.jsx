@@ -1,254 +1,416 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
+import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
-import { 
-  User, 
-  Smartphone, 
-  Mail, 
-  MapPin, 
-  Building, 
-  Flag, 
-  Hash, 
-  CreditCard, 
-  ArrowRight, 
-  ArrowLeft,
-  CheckCircle2,
-  ShieldCheck
-} from 'lucide-react';
+import { Smartphone, Key, ArrowRight, ShieldCheck, CheckCircle2, RefreshCw, UserPlus, Gift } from 'lucide-react';
+import logo from '../assets/GoldBarPay.png';
 
 export default function SignupPage() {
-  const [step, setStep] = useState(1);
+  const [searchParams] = useSearchParams();
+  const [step, setStep] = useState('mobile'); // 'mobile' | 'otp'
+  const [mobile, setMobile] = useState('');
+  const [referralCode, setReferralCode] = useState('');
+  const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resendTimer, setResendTimer] = useState(30);
+  const [canResend, setCanResend] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+
+  const { login } = useAuth();
   const navigate = useNavigate();
 
-  const [formData, setFormData] = useState({
-    name: '',
-    mobile: '',
-    email: '',
-    address: '',
-    city: '',
-    state: '',
-    pincode: '',
-    aadhar_number: '',
-    pan_number: ''
-  });
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const validateStep = (currentStep) => {
-    if (currentStep === 1) {
-      if (!formData.name || !formData.mobile || !formData.email) {
-        toast.error('Please fill all personal details');
-        return false;
-      }
-      if (!/^[6-9]\d{9}$/.test(formData.mobile)) {
-        toast.error('Please enter a valid 10-digit mobile number');
-        return false;
-      }
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-        toast.error('Please enter a valid email address');
-        return false;
-      }
-      return true;
+  useEffect(() => {
+    const ref = searchParams.get('ref');
+    if (ref) {
+      setReferralCode(ref);
     }
-    return true;
-  };
+  }, [searchParams]);
 
-  const nextStep = () => {
-    if (validateStep(step)) {
-      setStep(prev => prev + 1);
+  useEffect(() => {
+    let timer;
+    if (step === 'otp' && resendTimer > 0) {
+      timer = setInterval(() => {
+        setResendTimer(prev => prev - 1);
+      }, 1000);
+    } else if (resendTimer <= 0) {
+      setCanResend(true);
     }
-  };
-  const prevStep = () => setStep(prev => prev - 1);
+    return () => clearInterval(timer);
+  }, [step, resendTimer]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validateStep(1)) return;
+  const handleSendOtp = async (e) => {
+    if (e) e.preventDefault();
+    if (!/^[6-9]\d{9}$/.test(mobile)) {
+      toast.error('Please enter a valid 10-digit mobile number');
+      return;
+    }
     setLoading(true);
     try {
-      const res = await api.post('/auth/signup.php', formData);
+      const res = await api.post('/auth/send_otp.php', {
+        mobile,
+        type: 'signup',
+        referral_code: referralCode
+      });
+
       if (res.data.success) {
-        toast.success(res.data.message, { duration: 5000 });
-        setStep(2); // Success step
+        toast.success('OTP sent successfully!');
+        if (res.data.dev_otp) {
+          toast(`Developer Mode: Use OTP ${res.data.dev_otp}`, {
+            icon: '🔑',
+            duration: 6000,
+            style: { border: '1px solid #D4AF37', background: '#1A1A1A', color: '#FFF' }
+          });
+        }
+        setStep('otp');
+        setResendTimer(30);
+        setCanResend(false);
+      } else {
+        if (res.data.already_registered) {
+          toast.error(res.data.message || 'Already registered. Please login.');
+          setTimeout(() => navigate('/login'), 1500);
+        } else {
+          toast.error(res.data.message || 'Failed to send OTP');
+        }
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Connection failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (!canResend || isResending) return;
+    setIsResending(true);
+    try {
+      const res = await api.post('/auth/send_otp.php', {
+        mobile,
+        type: 'signup',
+        referral_code: referralCode
+      });
+      if (res.data.success) {
+        toast.success('OTP resent successfully!');
+        if (res.data.dev_otp) {
+          toast(`Developer Mode: Use OTP ${res.data.dev_otp}`, {
+            icon: '🔑',
+            duration: 6000,
+            style: { border: '1px solid #D4AF37', background: '#1A1A1A', color: '#FFF' }
+          });
+        }
+        setResendTimer(30);
+        setCanResend(false);
       } else {
         toast.error(res.data.message);
       }
     } catch (err) {
-      toast.error('Signup failed. Please try again.');
+      toast.error('Failed to resend OTP');
+    } finally {
+      setIsResending(false);
     }
-    setLoading(false);
   };
 
-  const steps = [
-    { title: 'Personal', icon: User }
-  ];
+  const handleVerifyAndSignup = async (e) => {
+    e.preventDefault();
+    if (otp.length !== 6) {
+      toast.error('Please enter the 6-digit OTP');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await api.post('/auth/signup.php', {
+        mobile,
+        otp,
+        referral_code: referralCode
+      });
+
+      if (res.data.success && res.data.token) {
+        login(res.data.user, res.data.token);
+        toast.success('🎉 Account created! Welcome to Gold Platform.');
+        navigate('/dashboard');
+      } else {
+        toast.error(res.data.message || 'Registration failed');
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Verification failed. Try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background Elements */}
-      <div className="absolute top-0 left-0 w-full h-full">
-        <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-[#BF953F]/10 rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#D4AF37]/5 rounded-full blur-[120px]" />
-      </div>
+    <div className="min-h-screen flex relative overflow-hidden" style={{ background: 'var(--bg-void, #070709)' }}>
+      {/* ── Ambient background glows ── */}
+      <motion.div
+        animate={{ scale: [1, 1.15, 1], opacity: [0.06, 0.14, 0.06] }}
+        transition={{ duration: 7, repeat: Infinity }}
+        className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full pointer-events-none"
+        style={{ background: '#D4AF37', filter: 'blur(130px)' }}
+      />
+      <motion.div
+        animate={{ scale: [1, 1.2, 1], opacity: [0.03, 0.08, 0.03] }}
+        transition={{ duration: 10, repeat: Infinity, delay: 2 }}
+        className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full pointer-events-none"
+        style={{ background: '#D4AF37', filter: 'blur(160px)' }}
+      />
 
-      <div className="w-full max-w-2xl relative z-10">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
-        >
-          <h1 className="text-4xl font-black gold-text mb-2">Create Account</h1>
-          <p className="text-white/40">Join Gold Platform and start saving in 24K Gold</p>
+      {/* ── LEFT BRANDING PANEL (desktop only) ── */}
+      <div
+        className="hidden lg:flex flex-col justify-between w-[45%] p-14 relative"
+        style={{
+          background: 'linear-gradient(160deg, rgba(22,18,8,0.96) 0%, rgba(8,6,2,0.99) 100%)',
+          borderRight: '1px solid rgba(212,175,55,0.12)'
+        }}
+      >
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+          <div className="relative inline-block">
+            <div
+              className="absolute inset-0 rounded-full blur-xl opacity-50"
+              style={{ background: 'rgba(212,175,55,0.5)', transform: 'scale(1.4)' }}
+            />
+            <img src={logo} alt="GoldBar" className="h-14 relative z-10 object-contain" />
+          </div>
         </motion.div>
 
-        {/* Progress Bar */}
-        <div className="mb-12 px-8">
-          <div className="relative flex justify-between">
-            <div className="absolute top-1/2 left-0 w-full h-0.5 bg-white/5 -translate-y-1/2 z-0" />
-            <motion.div 
-              className="absolute top-1/2 left-0 h-0.5 bg-[#D4AF37] -translate-y-1/2 z-0"
-              initial={{ width: '0%' }}
-              animate={{ width: `${((step - 1) / (steps.length - 1)) * 100}%` }}
-            />
-            {steps.map((s, i) => (
-              <div key={i} className="relative z-10 flex flex-col items-center">
-                <motion.div
-                  animate={{
-                    backgroundColor: step > i + 1 ? '#D4AF37' : step === i + 1 ? '#1A1A1A' : '#0A0A0A',
-                    borderColor: step >= i + 1 ? '#D4AF37' : '#FFFFFF1A',
-                    scale: step === i + 1 ? 1.1 : 1
-                  }}
-                  className="w-10 h-10 rounded-xl border-2 flex items-center justify-center text-white"
-                >
-                  {step > i + 1 ? <CheckCircle2 size={20} className="text-black" /> : <s.icon size={18} className={step === i + 1 ? 'text-[#D4AF37]' : 'text-white/20'} />}
-                </motion.div>
-                <span className={`text-[10px] mt-2 font-bold uppercase tracking-widest ${step >= i + 1 ? 'text-[#D4AF37]' : 'text-white/20'}`}>
-                  {s.title}
-                </span>
+        <div>
+          <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.7, delay: 0.2 }}>
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-4"
+              style={{ background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.25)' }}>
+              <Gift size={14} className="text-[#D4AF37]" />
+              <span className="text-xs font-bold text-[#D4AF37]">Instant 50 JC Welcome Bonus</span>
+            </div>
+            <h1 className="text-5xl font-black leading-tight mb-6 text-white">
+              Instant Signup.<br />
+              <span style={{ background: 'linear-gradient(135deg,#F5C518,#D4AF37,#BF953F)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                Save in 24K Gold.
+              </span>
+            </h1>
+            <p className="text-base leading-relaxed text-white/40">
+              No long forms required. Sign up in seconds with just your mobile number and OTP. Complete your profile anytime directly from your dashboard!
+            </p>
+          </motion.div>
+
+          {/* Value props */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4, duration: 0.6 }}
+            className="grid grid-cols-3 gap-4 mt-10">
+            {[
+              { val: '⚡ 10s', label: 'Fast Signup' },
+              { val: '₹10', label: 'Start From' },
+              { val: '100%', label: 'Secure Vaults' }
+            ].map(s => (
+              <div key={s.label} className="text-center p-4 rounded-2xl"
+                style={{ background: 'rgba(212,175,55,0.05)', border: '1px solid rgba(212,175,55,0.12)' }}>
+                <p className="font-black text-lg text-[#D4AF37]">{s.val}</p>
+                <p className="text-[11px] mt-1 font-medium text-white/30">{s.label}</p>
               </div>
             ))}
-          </div>
+          </motion.div>
         </div>
 
-        <div className="card-premium border-white/5 backdrop-blur-xl bg-white/[0.02]">
-          <form onSubmit={handleSubmit}>
-            <AnimatePresence mode="wait">
-              {step === 1 && (
-                <motion.div
-                  key="step1"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="space-y-6"
-                >
-                  <div className="grid md:grid-cols-1 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-white/60 ml-1">Full Name</label>
-                      <div className="relative">
-                        <User className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={18} />
-                        <input
-                          type="text"
-                          name="name"
-                          value={formData.name}
-                          onChange={handleChange}
-                          placeholder="John Doe"
-                          className="input-premium pl-12"
-                          required
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-white/60 ml-1">Mobile Number</label>
-                      <div className="relative">
-                        <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={18} />
-                        <input
-                          type="tel"
-                          name="mobile"
-                          value={formData.mobile}
-                          onChange={handleChange}
-                          placeholder="9876543210"
-                          className="input-premium pl-12"
-                          required
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-white/60 ml-1">Email Address</label>
-                      <div className="relative">
-                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={18} />
-                        <input
-                          type="email"
-                          name="email"
-                          value={formData.email}
-                          onChange={handleChange}
-                          placeholder="john@example.com"
-                          className="input-premium pl-12"
-                          required
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-white/60 ml-1">Referral Code (Optional)</label>
-                      <div className="relative">
-                        <User className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={18} />
-                        <input
-                          type="text"
-                          name="referral_code"
-                          value={formData.referral_code || ''}
-                          onChange={handleChange}
-                          placeholder="Referrer's mobile number"
-                          className="input-premium pl-12"
-                        />
-                      </div>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
+          className="flex items-center gap-3 px-5 py-3 rounded-2xl w-fit"
+          style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+          <ShieldCheck size={16} className="text-[#4ade80]" />
+          <span className="text-xs font-semibold text-white/40">Bank-Grade 256-bit Encryption · RBI Compliant</span>
+        </motion.div>
+      </div>
+
+      {/* ── RIGHT FORM PANEL ── */}
+      <div className="flex-1 flex items-center justify-center p-6 sm:p-10 lg:p-16">
+        <div className="w-full max-w-sm">
+
+          {/* Mobile logo */}
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
+            className="flex justify-center mb-8 lg:hidden">
+            <div className="relative">
+              <div className="absolute inset-0 blur-xl opacity-50 rounded-full" style={{ background: 'rgba(212,175,55,0.5)', transform: 'scale(1.5)' }} />
+              <img src={logo} alt="GoldBar" className="h-14 relative z-10 object-contain" />
+            </div>
+          </motion.div>
+
+          <AnimatePresence mode="wait">
+            {step === 'mobile' ? (
+              <motion.div
+                key="step-mobile"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="mb-8">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider text-[#D4AF37] bg-[#D4AF37]/10 border border-[#D4AF37]/20">
+                      Step 1 of 2
+                    </span>
+                    <span className="text-xs text-white/40">Quick Registration</span>
+                  </div>
+                  <h2 className="text-3xl font-black text-white">Create Account</h2>
+                  <p className="text-sm mt-1 text-white/40">
+                    Enter your mobile number to receive a one-time password
+                  </p>
+                </div>
+
+                <form onSubmit={handleSendOtp} className="space-y-4">
+                  {/* Mobile input */}
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider mb-2 text-white/60">
+                      Mobile Number
+                    </label>
+                    <div className="relative flex items-center rounded-2xl overflow-hidden border border-white/10 focus-within:border-[#D4AF37] bg-white/[0.03] transition-colors">
+                      <span className="px-4 py-3.5 text-sm font-bold text-white/50 border-r border-white/10 bg-white/[0.02]">
+                        +91
+                      </span>
+                      <input
+                        type="tel"
+                        maxLength={10}
+                        value={mobile}
+                        onChange={e => setMobile(e.target.value.replace(/\D/g, ''))}
+                        placeholder="Enter 10-digit number"
+                        autoFocus
+                        required
+                        className="w-full bg-transparent px-4 py-3.5 text-white text-sm font-semibold tracking-wide placeholder-white/20 focus:outline-none"
+                      />
+                      <Smartphone size={18} className="mr-4 text-white/20 flex-shrink-0" />
                     </div>
                   </div>
-                  <button type="submit" disabled={loading} className="btn-gold w-full flex items-center justify-center gap-2">
+
+                  {/* Referral Code (Optional) */}
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider mb-2 text-white/40 flex items-center justify-between">
+                      <span>Referral Code</span>
+                      <span className="text-[10px] font-normal text-[#D4AF37]">Optional</span>
+                    </label>
+                    <div className="relative flex items-center rounded-2xl overflow-hidden border border-white/10 focus-within:border-[#D4AF37] bg-white/[0.03] transition-colors">
+                      <input
+                        type="text"
+                        value={referralCode}
+                        onChange={e => setReferralCode(e.target.value.trim())}
+                        placeholder="Referrer's mobile number"
+                        className="w-full bg-transparent px-4 py-3 text-white text-sm placeholder-white/20 focus:outline-none"
+                      />
+                      <Gift size={18} className="mr-4 text-white/20 flex-shrink-0" />
+                    </div>
+                  </div>
+
+                  {/* Submit Button */}
+                  <button
+                    type="submit"
+                    disabled={loading || mobile.length !== 10}
+                    className="w-full py-3.5 rounded-2xl font-black text-sm tracking-wide flex items-center justify-center gap-2 transition-all mt-6 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg"
+                    style={{
+                      background: 'linear-gradient(135deg, #F5C518 0%, #D4AF37 50%, #BF953F 100%)',
+                      color: '#070709',
+                      boxShadow: mobile.length === 10 ? '0 8px 25px rgba(212,175,55,0.3)' : 'none'
+                    }}
+                  >
                     {loading ? (
-                      <div className="w-6 h-6 border-2 border-black/30 border-t-black rounded-full animate-spin"></div>
+                      <RefreshCw size={18} className="animate-spin" />
                     ) : (
-                      <>Complete Signup <ArrowRight size={18} /></>
+                      <>
+                        <span>Get OTP</span>
+                        <ArrowRight size={18} />
+                      </>
                     )}
                   </button>
-                </motion.div>
-              )}
+                </form>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="step-otp"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="mb-8">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider text-[#D4AF37] bg-[#D4AF37]/10 border border-[#D4AF37]/20">
+                      Step 2 of 2
+                    </span>
+                    <span className="text-xs text-white/40">Verify OTP</span>
+                  </div>
+                  <h2 className="text-3xl font-black text-white">Enter OTP</h2>
+                  <p className="text-sm mt-1 text-white/40">
+                    6-digit code sent to <span className="font-bold text-white">+91 {mobile}</span>
+                  </p>
+                </div>
 
-              {step === 2 && (
-                <motion.div
-                  key="step2"
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  className="text-center py-8 space-y-6"
-                >
-                  <div className="w-24 h-24 bg-[#D4AF37]/20 rounded-full flex items-center justify-center mx-auto border-4 border-[#D4AF37]">
-                    <CheckCircle2 size={48} className="text-[#D4AF37]" />
+                <form onSubmit={handleVerifyAndSignup} className="space-y-4">
+                  {/* OTP Input */}
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider mb-2 text-white/60">
+                      One Time Password
+                    </label>
+                    <div className="relative flex items-center rounded-2xl overflow-hidden border border-white/10 focus-within:border-[#D4AF37] bg-white/[0.03] transition-colors">
+                      <input
+                        type="text"
+                        maxLength={6}
+                        value={otp}
+                        onChange={e => setOtp(e.target.value.replace(/\D/g, ''))}
+                        placeholder="••••••"
+                        autoFocus
+                        required
+                        className="w-full bg-transparent px-4 py-3.5 text-center text-2xl font-black tracking-[0.4em] text-[#D4AF37] placeholder-white/20 focus:outline-none"
+                      />
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <h2 className="text-3xl font-bold text-white">Registration Successful!</h2>
-                    <p className="text-white/40 max-w-xs mx-auto">Your account has been created. You can now login using your mobile number and OTP.</p>
+
+                  {/* Resend & Change number row */}
+                  <div className="flex items-center justify-between text-xs pt-1">
+                    <button
+                      type="button"
+                      onClick={() => { setStep('mobile'); setOtp(''); }}
+                      className="text-white/40 hover:text-white transition-colors"
+                    >
+                      Change Number
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={!canResend || isResending}
+                      onClick={handleResendOtp}
+                      className="text-[#D4AF37] font-semibold hover:underline disabled:opacity-40 disabled:no-underline"
+                    >
+                      {canResend ? (isResending ? 'Resending...' : 'Resend OTP') : `Resend in ${resendTimer}s`}
+                    </button>
                   </div>
+
+                  {/* Verify & Sign Up button */}
                   <button
-                    type="button"
-                    onClick={() => navigate('/login')}
-                    className="btn-gold w-full flex items-center justify-center gap-2"
+                    type="submit"
+                    disabled={loading || otp.length !== 6}
+                    className="w-full py-3.5 rounded-2xl font-black text-sm tracking-wide flex items-center justify-center gap-2 transition-all mt-6 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg"
+                    style={{
+                      background: 'linear-gradient(135deg, #F5C518 0%, #D4AF37 50%, #BF953F 100%)',
+                      color: '#070709',
+                      boxShadow: otp.length === 6 ? '0 8px 25px rgba(212,175,55,0.3)' : 'none'
+                    }}
                   >
-                    Go to Login <ArrowRight size={18} />
+                    {loading ? (
+                      <RefreshCw size={18} className="animate-spin" />
+                    ) : (
+                      <>
+                        <span>Verify & Sign Up</span>
+                        <ArrowRight size={18} />
+                      </>
+                    )}
                   </button>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </form>
-        </div>
+                </form>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-        {step < 2 && (
-          <p className="text-center mt-8 text-white/40 text-sm">
-            Already have an account? <Link to="/login" className="text-[#D4AF37] font-bold hover:underline">Sign In</Link>
-          </p>
-        )}
+          {/* Already have an account link */}
+          <div className="mt-8 text-center pt-6 border-t border-white/5">
+            <p className="text-sm text-white/40">
+              Already have an account?{' '}
+              <Link to="/login" className="font-bold text-[#D4AF37] hover:underline">
+                Sign In
+              </Link>
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

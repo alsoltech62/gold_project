@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { RefreshCw, TrendingUp, TrendingDown, Wallet, ShoppingCart, ArrowDownToLine, Truck, Activity, ArrowUpRight, Sparkles, Zap } from 'lucide-react';
+import { RefreshCw, TrendingUp, TrendingDown, Wallet, ShoppingCart, ArrowDownToLine, Truck, Activity, ArrowUpRight, Sparkles, Zap, Gift } from 'lucide-react';
+import toast from 'react-hot-toast';
 import api, { formatINR, formatGrams } from '../utils/api';
 import { format } from 'date-fns';
 
@@ -40,21 +41,45 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [activeBanner, setActiveBanner] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
+  const [claimingGift, setClaimingGift] = useState(false);
+
+  const pendingGift = data?.pending_gifts && data.pending_gifts.length > 0 ? data.pending_gifts[0] : null;
+
+  const handleClaimPendingGift = async () => {
+    if (!pendingGift) return;
+    setClaimingGift(true);
+    try {
+      const res = await api.post('/gold/gift.php', {
+        action: 'claim',
+        gift_id: pendingGift.id
+      });
+      if (res.data.success) {
+        toast.success(res.data.message || '24K Gold claimed successfully!', { icon: '🎉', duration: 5000 });
+        fetchDashboard();
+      } else {
+        toast.error(res.data.message || 'Failed to claim gift');
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Error claiming gold gift');
+    } finally {
+      setClaimingGift(false);
+    }
+  };
 
   const fetchDashboard = () => {
     setRefreshing(true);
     api.get('/user/dashboard.php')
-      .then(async r => { 
+      .then(async r => {
         let d = r.data.data;
         try {
           const txRes = await api.get('/user/transactions.php?page=1');
           if (txRes.data?.data?.length > 0) {
             d.recent_transactions = txRes.data.data.slice(0, 5);
           }
-        } catch (e) {}
-        setData(d); 
-        setLoading(false); 
-        setRefreshing(false); 
+        } catch (e) { }
+        setData(d);
+        setLoading(false);
+        setRefreshing(false);
       })
       .catch(() => { setLoading(false); setRefreshing(false); });
   };
@@ -70,7 +95,7 @@ export default function DashboardPage() {
 
   const goldRate = data?.gold_rate ?? 0;
   const silverRate = data?.silver_rate ?? 0;
-  
+
   // Calculate true current value by including locked metals
   const goldGrams = Number(data?.total_gold_grams || 0);
   const lockedGold = Number(data?.locked_gold || 0);
@@ -79,9 +104,9 @@ export default function DashboardPage() {
   const silverGrams = Number(data?.total_silver_grams || 0);
   const lockedSilver = Number(data?.locked_silver || 0);
   const totalSilverGrams = silverGrams + lockedSilver;
-  
+
   const calculatedCurrentValue = (totalGoldGrams * goldRate) + (totalSilverGrams * silverRate);
-  
+
   const totalInvested = data?.total_invested_inr ?? 0;
   const pl = calculatedCurrentValue - totalInvested;
   const plPct = totalInvested > 0 ? ((pl / totalInvested) * 100).toFixed(2) : '0.00';
@@ -167,67 +192,89 @@ export default function DashboardPage() {
         {/* LEFT COLUMN (3/5 on xl) */}
         <div className="xl:col-span-3 space-y-5">
 
-      {/* ── BANNER CAROUSEL ── */}
-      {currentBanner && (
-        <motion.div variants={itemVariants}
-          className="relative w-full overflow-hidden rounded-[24px] shadow-2xl bg-[#121218]"
-          style={{ aspectRatio: '16/7', border: '1px solid rgba(255,255,255,0.06)' }}>
-          <AnimatePresence mode="wait">
-            <motion.img
-              key={currentBanner.id || activeBanner}
-              src={getBannerUrl(currentBanner.image_url || currentBanner.imageUrl)}
-              alt="Promo Banner"
-              onError={(e) => {
-                const imgPath = currentBanner.image_url || currentBanner.imageUrl || '';
-                if (!e.currentTarget.dataset.retried && imgPath && !imgPath.startsWith('http')) {
-                  e.currentTarget.dataset.retried = 'true';
-                  e.currentTarget.src = `https://goldbarpe.com/backend/${imgPath.replace(/^\//, '')}`;
-                } else {
-                  e.currentTarget.style.display = 'none';
-                }
-              }}
-              initial={{ opacity: 0, scale: 1.05 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.97 }}
-              transition={{ duration: 0.6 }}
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-          </AnimatePresence>
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(2,2,4,0.6) 0%, transparent 60%)' }} />
-          {bannerList.length > 1 && (
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
-              {bannerList.map((_, i) => (
-                <button key={i} onClick={() => setActiveBanner(i)}
-                  className="rounded-full transition-all duration-400"
-                  style={{ width: activeBanner === i ? 20 : 6, height: 6, background: activeBanner === i ? '#D4AF37' : 'rgba(255,255,255,0.35)' }} />
-              ))}
-            </div>
+          {/* ── BANNER CAROUSEL ── */}
+          {currentBanner && (
+            <motion.div variants={itemVariants}
+              className="relative w-full overflow-hidden rounded-[24px] shadow-2xl bg-[#121218]"
+              style={{ aspectRatio: '16/7', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <AnimatePresence mode="wait">
+                <motion.img
+                  key={currentBanner.id || activeBanner}
+                  src={getBannerUrl(currentBanner.image_url || currentBanner.imageUrl)}
+                  alt="Promo Banner"
+                  onError={(e) => {
+                    const imgPath = currentBanner.image_url || currentBanner.imageUrl || '';
+                    if (!e.currentTarget.dataset.retried && imgPath && !imgPath.startsWith('http')) {
+                      e.currentTarget.dataset.retried = 'true';
+                      e.currentTarget.src = `https://goldbarpe.com/backend/${imgPath.replace(/^\//, '')}`;
+                    } else {
+                      e.currentTarget.style.display = 'none';
+                    }
+                  }}
+                  initial={{ opacity: 0, scale: 1.05 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.97 }}
+                  transition={{ duration: 0.6 }}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              </AnimatePresence>
+              <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(2,2,4,0.6) 0%, transparent 60%)' }} />
+              {bannerList.length > 1 && (
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+                  {bannerList.map((_, i) => (
+                    <button key={i} onClick={() => setActiveBanner(i)}
+                      className="rounded-full transition-all duration-400"
+                      style={{ width: activeBanner === i ? 20 : 6, height: 6, background: activeBanner === i ? '#D4AF37' : 'rgba(255,255,255,0.35)' }} />
+                  ))}
+                </div>
+              )}
+            </motion.div>
           )}
-        </motion.div>
-      )}
 
-      {/* ── QUICK ACTIONS ── */}
-      <motion.div variants={itemVariants} className="grid grid-cols-4 gap-3">
-        {[
-          { to: '/buy', icon: ShoppingCart, label: 'Buy', color: '#4ade80', bg: 'rgba(74,222,128,0.08)', border: 'rgba(74,222,128,0.2)' },
-          { to: '/sell?metal=gold', icon: TrendingDown, label: 'Sell', color: '#f87171', bg: 'rgba(248,113,113,0.08)', border: 'rgba(248,113,113,0.2)' },
-          { to: '/wallet', icon: Wallet, label: 'SIP', color: '#818cf8', bg: 'rgba(129,140,248,0.08)', border: 'rgba(129,140,248,0.2)' },
-          { to: '/delivery', icon: Truck, label: 'Deliver', color: '#34d399', bg: 'rgba(52,211,153,0.08)', border: 'rgba(52,211,153,0.2)' },
-        ].map((item) => (
-          <motion.div key={item.label} whileHover={{ y: -3, scale: 1.02 }} whileTap={{ scale: 0.95 }}>
-            <Link to={item.to} className="flex flex-col items-center gap-2.5 p-4 rounded-2xl text-center transition-all block"
-              style={{ background: item.bg, border: `1px solid ${item.border}` }}>
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-                style={{ background: `${item.color}20` }}>
-                <item.icon size={18} style={{ color: item.color }} />
-              </div>
-              <span className="text-xs font-bold" style={{ color: 'rgba(255,255,255,0.7)' }}>{item.label}</span>
-            </Link>
+          {/* ── QUICK ACTIONS ── */}
+          <motion.div variants={itemVariants} className="grid grid-cols-3 gap-3">
+            {[
+              { to: '/buy', icon: ShoppingCart, label: 'Buy', color: '#4ade80', bg: 'rgba(74,222,128,0.08)', border: 'rgba(74,222,128,0.2)' },
+              { to: '/sell?metal=gold', icon: TrendingDown, label: 'Sell', color: '#f87171', bg: 'rgba(248,113,113,0.08)', border: 'rgba(248,113,113,0.2)' },
+              // { to: '/wallet', icon: Wallet, label: 'SIP', color: '#818cf8', bg: 'rgba(129,140,248,0.08)', border: 'rgba(129,140,248,0.2)' },
+              { to: '/delivery', icon: Truck, label: 'Deliver', color: '#34d399', bg: 'rgba(52,211,153,0.08)', border: 'rgba(52,211,153,0.2)' },
+            ].map((item) => (
+              <motion.div key={item.label} whileHover={{ y: -3, scale: 1.02 }} whileTap={{ scale: 0.95 }}>
+                <Link to={item.to} className="flex flex-col items-center gap-2.5 p-4 rounded-2xl text-center transition-all block"
+                  style={{ background: item.bg, border: `1px solid ${item.border}` }}>
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+                    style={{ background: `${item.color}20` }}>
+                    <item.icon size={18} style={{ color: item.color }} />
+                  </div>
+                  <span className="text-xs font-bold" style={{ color: 'rgba(255,255,255,0.7)' }}>{item.label}</span>
+                </Link>
+              </motion.div>
+            ))}
           </motion.div>
-        ))}
-      </motion.div>
 
-      {/* ── ACTIVE SIP INFO ── */}
+          {/* ── PROFILE COMPLETION PROMPT BANNER ── */}
+          {data?.profile_completion && data?.profile_completion.percentage < 100 && (
+            <motion.div variants={itemVariants} className="p-4 rounded-2xl relative overflow-hidden"
+              style={{ background: 'linear-gradient(135deg, rgba(35,26,10,0.85) 0%, rgba(18,12,4,0.9) 100%)', border: '1px solid rgba(212,175,55,0.25)' }}>
+              <div className="flex items-center justify-between gap-3 mb-2">
+                <div className="flex items-center gap-2">
+                  <Sparkles size={16} className="text-[#D4AF37]" />
+                  <span className="text-xs font-bold text-white">Complete Your Profile ({data.profile_completion.percentage}% done)</span>
+                </div>
+                <Link to="/profile" className="text-xs font-black text-[#D4AF37] hover:underline flex items-center gap-1">
+                  <span>Complete Now</span>
+                  <ArrowUpRight size={13} />
+                </Link>
+              </div>
+              <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+                <div className="h-full gold-gradient rounded-full transition-all duration-700"
+                  style={{ width: `${data.profile_completion.percentage}%` }} />
+              </div>
+            </motion.div>
+          )}
+
+          {/* ── ACTIVE SIP INFO (COMMENTED OUT) ── */}
+          {/*
       {data?.sip_active && (
         <motion.div variants={itemVariants} className="flex items-center justify-between p-4 rounded-[20px]"
           style={{ background: 'rgba(74,222,128,0.05)', border: '1px solid rgba(74,222,128,0.2)' }}>
@@ -252,223 +299,283 @@ export default function DashboardPage() {
           <Link to="/wallet" className="text-green-400 text-xs font-bold px-3 py-1.5 rounded-lg bg-green-500/10">Manage</Link>
         </motion.div>
       )}
+      */}
 
-      {/* ── RECENT TRANSACTIONS ── */}
-      <motion.div variants={itemVariants}>
-        <div className="flex items-center justify-between mb-3">
-          <p className="section-label">Recent Activity</p>
-          <Link to="/transactions" className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider transition-colors"
-            style={{ color: '#D4AF37' }}>
-            See All <ArrowUpRight size={11} />
-          </Link>
-        </div>
-        <div className="rounded-[22px] overflow-hidden"
-          style={{ background: 'rgba(12,12,18,0.8)', border: '1px solid rgba(255,255,255,0.05)' }}>
-          {data?.recent_transactions?.length > 0 ? data.recent_transactions.map((t, i) => {
-            const isBuy = t.type === 'buy';
-            const isSell = t.type === 'sell';
-            const color = isBuy ? '#4ade80' : isSell ? '#f87171' : '#D4AF37';
-            const Icon = isBuy ? ShoppingCart : isSell ? ArrowDownToLine : Truck;
-            return (
-              <motion.div key={t.id}
-                initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.06 }}
-                className="flex items-center justify-between px-5 py-4"
-                style={{ borderBottom: i < data.recent_transactions.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
-                <div className="flex items-center gap-3.5">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{ background: `${color}12`, border: `1px solid ${color}25` }}>
-                    <Icon size={17} style={{ color }} />
-                  </div>
-                  <div>
-                    <p className="text-white font-bold text-sm capitalize leading-none">
-                      {t.type === 'delivery' ? 'Delivery' : `${t.metal_type === 'silver' ? 'Silver' : 'Gold'} ${t.type}`}
-                    </p>
-                    <p className="text-[11px] mt-1" style={{ color: 'rgba(255,255,255,0.3)' }}>
-                      {format(new Date(t.created_at), 'MMM dd • hh:mm a')}
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-white font-bold text-sm">₹{formatINR(t.amount_inr)}</p>
-                  <span className={`text-[10px] font-bold uppercase tracking-wider ${t.status === 'completed' ? 'text-green-400' : 'text-yellow-400'}`}>
-                    {t.status}
-                  </span>
-                </div>
-              </motion.div>
-            );
-          }) : (
-            <div className="py-14 text-center">
-              <div className="text-4xl mb-3 opacity-30">📊</div>
-              <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.25)' }}>No recent activity</p>
+          {/* ── RECENT TRANSACTIONS ── */}
+          <motion.div variants={itemVariants}>
+            <div className="flex items-center justify-between mb-3">
+              <p className="section-label">Recent Activity</p>
+              <Link to="/transactions" className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider transition-colors"
+                style={{ color: '#D4AF37' }}>
+                See All <ArrowUpRight size={11} />
+              </Link>
             </div>
-          )}
-        </div>
-      </motion.div>
+            <div className="rounded-[22px] overflow-hidden"
+              style={{ background: 'rgba(12,12,18,0.8)', border: '1px solid rgba(255,255,255,0.05)' }}>
+              {data?.recent_transactions?.length > 0 ? data.recent_transactions.map((t, i) => {
+                const isBuy = t.type === 'buy';
+                const isSell = t.type === 'sell';
+                const color = isBuy ? '#4ade80' : isSell ? '#f87171' : '#D4AF37';
+                const Icon = isBuy ? ShoppingCart : isSell ? ArrowDownToLine : Truck;
+                return (
+                  <motion.div key={t.id}
+                    initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.06 }}
+                    className="flex items-center justify-between px-5 py-4"
+                    style={{ borderBottom: i < data.recent_transactions.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                    <div className="flex items-center gap-3.5">
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                        style={{ background: `${color}12`, border: `1px solid ${color}25` }}>
+                        <Icon size={17} style={{ color }} />
+                      </div>
+                      <div>
+                        <p className="text-white font-bold text-sm capitalize leading-none">
+                          {t.type === 'delivery' ? 'Delivery' : `${t.metal_type === 'silver' ? 'Silver' : 'Gold'} ${t.type}`}
+                        </p>
+                        <p className="text-[11px] mt-1" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                          {format(new Date(t.created_at), 'MMM dd • hh:mm a')}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-white font-bold text-sm">₹{formatINR(t.amount_inr)}</p>
+                      <span className={`text-[10px] font-bold uppercase tracking-wider ${t.status === 'completed' ? 'text-green-400' : 'text-yellow-400'}`}>
+                        {t.status}
+                      </span>
+                    </div>
+                  </motion.div>
+                );
+              }) : (
+                <div className="py-14 text-center">
+                  <div className="text-4xl mb-3 opacity-30">📊</div>
+                  <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.25)' }}>No recent activity</p>
+                </div>
+              )}
+            </div>
+          </motion.div>
 
         </div>{/* end left col */}
 
         {/* RIGHT COLUMN (2/5 on xl) */}
         <div className="xl:col-span-2 space-y-5">
 
-      {/* ── PORTFOLIO CARD ── */}
-      <motion.div variants={itemVariants} className="relative rounded-[28px] overflow-hidden p-7"
-        style={{ background: 'linear-gradient(135deg, #12100A 0%, #0C0A06 50%, #080806 100%)', border: '1px solid rgba(212,175,55,0.2)', boxShadow: '0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(212,175,55,0.1)' }}>
+          {/* ── PORTFOLIO CARD ── */}
+          <motion.div variants={itemVariants} className="relative rounded-[28px] overflow-hidden p-7"
+            style={{ background: 'linear-gradient(135deg, #12100A 0%, #0C0A06 50%, #080806 100%)', border: '1px solid rgba(212,175,55,0.2)', boxShadow: '0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(212,175,55,0.1)' }}>
 
-        {/* Floating particles */}
-        {particlesData.map((p, i) => (
-          <div key={i} className="particle absolute" style={{
-            width: p.size, height: p.size, left: p.left, bottom: '20%',
-            background: p.color, '--duration': p.duration, '--delay': p.delay,
-            boxShadow: `0 0 6px ${p.color}`,
-          }} />
-        ))}
+            {/* Floating particles */}
+            {particlesData.map((p, i) => (
+              <div key={i} className="particle absolute" style={{
+                width: p.size, height: p.size, left: p.left, bottom: '20%',
+                background: p.color, '--duration': p.duration, '--delay': p.delay,
+                boxShadow: `0 0 6px ${p.color}`,
+              }} />
+            ))}
 
-        {/* Ambient glow */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-32 rounded-full opacity-10"
-            style={{ background: '#D4AF37', filter: 'blur(40px)', animation: 'glowBreath 4s ease-in-out infinite' }} />
-        </div>
-
-        {/* SVG Chart */}
-        <div className="absolute bottom-0 left-0 right-0 h-28 pointer-events-none opacity-30">
-          <svg viewBox="0 0 400 100" preserveAspectRatio="none" className="w-full h-full">
-            <defs>
-              <linearGradient id="cg" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor="#D4AF37" stopOpacity="0" />
-                <stop offset="50%" stopColor="#F5C518" />
-                <stop offset="100%" stopColor="#D4AF37" stopOpacity="0" />
-              </linearGradient>
-              <linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#D4AF37" stopOpacity="0.6" />
-                <stop offset="100%" stopColor="#D4AF37" stopOpacity="0" />
-              </linearGradient>
-            </defs>
-            <path d="M0,70 Q60,50 100,60 T200,40 T300,55 T400,30" stroke="url(#cg)" strokeWidth="2" fill="none" strokeLinecap="round" />
-            <path d="M0,70 Q60,50 100,60 T200,40 T300,55 T400,30 L400,100 L0,100 Z" fill="url(#ag)" />
-          </svg>
-        </div>
-
-        {/* Content */}
-        <div className="relative z-10 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-5"
-            style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(212,175,55,0.25)', backdropFilter: 'blur(10px)' }}>
-            <Wallet size={11} style={{ color: '#D4AF37' }} />
-            <span className="text-[10px] font-bold uppercase tracking-[0.15em]" style={{ color: '#D4AF37' }}>Total Portfolio</span>
-          </div>
-
-          <h2 className="font-black text-white mb-3" style={{ fontSize: '2.6rem', lineHeight: 1, letterSpacing: '-0.02em', textShadow: '0 0 40px rgba(212,175,55,0.2)' }}>
-            ₹<AnimatedNumber value={calculatedCurrentValue || 0} />
-          </h2>
-
-          <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold ${pl >= 0 ? '' : ''}`}
-            style={{
-              background: pl >= 0 ? 'rgba(74,222,128,0.1)' : 'rgba(248,113,113,0.1)',
-              border: `1px solid ${pl >= 0 ? 'rgba(74,222,128,0.25)' : 'rgba(248,113,113,0.25)'}`,
-              color: pl >= 0 ? '#4ade80' : '#f87171'
-            }}>
-            {pl >= 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
-            <span>{pl >= 0 ? '+' : '-'}₹{formatINR(Math.abs(pl))} ({plPct}%)</span>
-          </div>
-
-          <div className="flex items-center justify-center gap-6 mt-6 pt-5"
-            style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-            <div className="text-center">
-              <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.3)' }}>Invested</p>
-              <p className="text-white font-bold text-sm">₹{formatINR(data?.total_invested_inr)}</p>
+            {/* Ambient glow */}
+            <div className="absolute inset-0 pointer-events-none">
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-32 rounded-full opacity-10"
+                style={{ background: '#D4AF37', filter: 'blur(40px)', animation: 'glowBreath 4s ease-in-out infinite' }} />
             </div>
-            <div className="h-8 w-px" style={{ background: 'rgba(255,255,255,0.07)' }} />
-            <div className="text-center">
-              <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.3)' }}>Gold</p>
-              <p className="font-bold text-sm" style={{ color: '#D4AF37' }}>{formatGrams(totalGoldGrams)}</p>
+
+            {/* SVG Chart */}
+            <div className="absolute bottom-0 left-0 right-0 h-28 pointer-events-none opacity-30">
+              <svg viewBox="0 0 400 100" preserveAspectRatio="none" className="w-full h-full">
+                <defs>
+                  <linearGradient id="cg" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="#D4AF37" stopOpacity="0" />
+                    <stop offset="50%" stopColor="#F5C518" />
+                    <stop offset="100%" stopColor="#D4AF37" stopOpacity="0" />
+                  </linearGradient>
+                  <linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#D4AF37" stopOpacity="0.6" />
+                    <stop offset="100%" stopColor="#D4AF37" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+                <path d="M0,70 Q60,50 100,60 T200,40 T300,55 T400,30" stroke="url(#cg)" strokeWidth="2" fill="none" strokeLinecap="round" />
+                <path d="M0,70 Q60,50 100,60 T200,40 T300,55 T400,30 L400,100 L0,100 Z" fill="url(#ag)" />
+              </svg>
             </div>
-            <div className="h-8 w-px" style={{ background: 'rgba(255,255,255,0.07)' }} />
-            <div className="text-center">
-              <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.3)' }}>Silver</p>
-              <p className="font-bold text-sm" style={{ color: '#94a3b8' }}>{formatGrams(totalSilverGrams)}</p>
-            </div>
-          </div>
-        </div>
-      </motion.div>
 
-      {/* ── VAULT CARDS ── */}
-      <motion.div variants={itemVariants}>
-        <p className="section-label mb-3">Your Vault</p>
+            {/* Content */}
+            <div className="relative z-10 text-center">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-5"
+                style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(212,175,55,0.25)', backdropFilter: 'blur(10px)' }}>
+                <Wallet size={11} style={{ color: '#D4AF37' }} />
+                <span className="text-[10px] font-bold uppercase tracking-[0.15em]" style={{ color: '#D4AF37' }}>Total Portfolio</span>
+              </div>
 
+              <h2 className="font-black text-white mb-3" style={{ fontSize: '2.6rem', lineHeight: 1, letterSpacing: '-0.02em', textShadow: '0 0 40px rgba(212,175,55,0.2)' }}>
+                ₹<AnimatedNumber value={calculatedCurrentValue || 0} />
+              </h2>
 
-        {/* Gold Card */}
-        <motion.div whileHover={{ y: -3 }} className="relative rounded-[22px] p-5 overflow-hidden"
-          style={{ background: 'linear-gradient(135deg, rgba(22,18,10,0.95), rgba(12,10,6,0.98))', border: '1px solid rgba(212,175,55,0.18)' }}>
-          <div className="absolute -right-4 -top-4 text-7xl opacity-[0.07]">🥇</div>
-          <div className="absolute inset-0 opacity-20" style={{ background: 'radial-gradient(circle at 80% 20%, rgba(212,175,55,0.5), transparent 60%)' }} />
-          <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
-                style={{ background: 'rgba(212,175,55,0.12)', border: '1px solid rgba(212,175,55,0.25)' }}>🥇</div>
-              <div>
-                <p className="text-white font-bold text-sm">24K Gold</p>
-                <p className="text-xs font-semibold" style={{ color: '#D4AF37' }}>{formatGrams(data?.total_gold_grams)} gm</p>
+              <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold ${pl >= 0 ? '' : ''}`}
+                style={{
+                  background: pl >= 0 ? 'rgba(74,222,128,0.1)' : 'rgba(248,113,113,0.1)',
+                  border: `1px solid ${pl >= 0 ? 'rgba(74,222,128,0.25)' : 'rgba(248,113,113,0.25)'}`,
+                  color: pl >= 0 ? '#4ade80' : '#f87171'
+                }}>
+                {pl >= 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+                <span>{pl >= 0 ? '+' : '-'}₹{formatINR(Math.abs(pl))} ({plPct}%)</span>
+              </div>
+
+              <div className="flex items-center justify-center gap-6 mt-6 pt-5"
+                style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                <div className="text-center">
+                  <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.3)' }}>Invested</p>
+                  <p className="text-white font-bold text-sm">₹{formatINR(data?.total_invested_inr)}</p>
+                </div>
+                <div className="h-8 w-px" style={{ background: 'rgba(255,255,255,0.07)' }} />
+                <div className="text-center">
+                  <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.3)' }}>Gold</p>
+                  <p className="font-bold text-sm" style={{ color: '#D4AF37' }}>{formatGrams(totalGoldGrams)}</p>
+                </div>
+                <div className="h-8 w-px" style={{ background: 'rgba(255,255,255,0.07)' }} />
+                <div className="text-center">
+                  <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.3)' }}>Silver</p>
+                  <p className="font-bold text-sm" style={{ color: '#94a3b8' }}>{formatGrams(totalSilverGrams)}</p>
+                </div>
               </div>
             </div>
-            <div className="flex justify-between items-center mb-2 mt-2">
-              <p className="text-xs text-white/50">Locked</p>
-              <div className="flex items-center gap-2">
-                <p className="text-xs font-semibold text-white/80">{formatGrams(data?.locked_gold || 0)}</p>
-                <Link to="/lock-in?metal=gold" className="text-[10px] font-bold text-[#D4AF37] uppercase tracking-widest bg-[#D4AF37]/10 border border-[#D4AF37]/20 px-2 py-0.5 rounded-md hover:bg-[#D4AF37]/20 transition-colors">
-                  View
-                </Link>
-              </div>
-            </div>
-            <div className="divider-gold mb-3 mt-1" />
-            <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>Current Value</p>
-            <p className="text-white font-bold text-xl mb-4">₹{formatINR(data?.gold_current_value)}</p>
-            <div className="flex gap-2">
-              <Link to="/buy" className="flex-1 py-2 rounded-xl text-xs font-bold text-center"
-                style={{ background: 'rgba(212,175,55,0.9)', color: '#000' }}>Buy Gold</Link>
-              <Link to="/sell?metal=gold" className="flex-1 py-2 rounded-xl text-xs font-bold text-center"
-                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)' }}>Sell</Link>
-            </div>
-          </div>
-        </motion.div>
+          </motion.div>
 
-        {/* Silver Card */}
-        <motion.div whileHover={{ y: -3 }} className="relative rounded-[22px] p-5 overflow-hidden"
-          style={{ background: 'linear-gradient(135deg, rgba(16,18,22,0.95), rgba(10,12,16,0.98))', border: '1px solid rgba(148,163,184,0.18)' }}>
-          <div className="absolute -right-4 -top-4 text-7xl opacity-[0.07]">🥈</div>
-          <div className="absolute inset-0 opacity-20" style={{ background: 'radial-gradient(circle at 80% 20%, rgba(148,163,184,0.4), transparent 60%)' }} />
-          <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
-                style={{ background: 'rgba(148,163,184,0.12)', border: '1px solid rgba(148,163,184,0.25)' }}>🥈</div>
-              <div>
-                <p className="text-white font-bold text-sm">999 Silver</p>
-                <p className="text-xs font-semibold" style={{ color: '#94a3b8' }}>{formatGrams(data?.total_silver_grams)} gm</p>
+          {/* ── VAULT CARDS ── */}
+          <motion.div variants={itemVariants}>
+            <p className="section-label mb-3">Your Vault</p>
+
+
+            {/* Gold Card */}
+            <motion.div whileHover={{ y: -3 }} className="relative rounded-[22px] p-5 overflow-hidden"
+              style={{ background: 'linear-gradient(135deg, rgba(22,18,10,0.95), rgba(12,10,6,0.98))', border: '1px solid rgba(212,175,55,0.18)' }}>
+              <div className="absolute -right-4 -top-4 text-7xl opacity-[0.07]">🥇</div>
+              <div className="absolute inset-0 opacity-20" style={{ background: 'radial-gradient(circle at 80% 20%, rgba(212,175,55,0.5), transparent 60%)' }} />
+              <div className="relative z-10">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
+                    style={{ background: 'rgba(212,175,55,0.12)', border: '1px solid rgba(212,175,55,0.25)' }}>🥇</div>
+                  <div>
+                    <p className="text-white font-bold text-sm">24K Gold</p>
+                    <p className="text-xs font-semibold" style={{ color: '#D4AF37' }}>{formatGrams(data?.total_gold_grams)} gm</p>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center mb-2 mt-2">
+                  <p className="text-xs text-white/50">Locked</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs font-semibold text-white/80">{formatGrams(data?.locked_gold || 0)}</p>
+                    <Link to="/lock-in?metal=gold" className="text-[10px] font-bold text-[#D4AF37] uppercase tracking-widest bg-[#D4AF37]/10 border border-[#D4AF37]/20 px-2 py-0.5 rounded-md hover:bg-[#D4AF37]/20 transition-colors">
+                      View
+                    </Link>
+                  </div>
+                </div>
+                <div className="divider-gold mb-3 mt-1" />
+                <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>Current Value</p>
+                <p className="text-white font-bold text-xl mb-4">₹{formatINR(data?.gold_current_value)}</p>
+                <div className="flex gap-2">
+                  <Link to="/buy" className="flex-1 py-2 rounded-xl text-xs font-bold text-center"
+                    style={{ background: 'rgba(212,175,55,0.9)', color: '#000' }}>Buy Gold</Link>
+                  <Link to="/sell?metal=gold" className="flex-1 py-2 rounded-xl text-xs font-bold text-center"
+                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)' }}>Sell</Link>
+                </div>
               </div>
-            </div>
-            <div className="flex justify-between items-center mb-2 mt-2">
-              <p className="text-xs text-white/50">Locked</p>
-              <div className="flex items-center gap-2">
-                <p className="text-xs font-semibold text-white/80">{formatGrams(data?.locked_silver || 0)}</p>
-                <Link to="/lock-in?metal=silver" className="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-400/10 border border-gray-400/20 px-2 py-0.5 rounded-md hover:bg-gray-400/20 transition-colors">
-                  View
-                </Link>
+            </motion.div>
+
+            {/* Silver Card */}
+            <motion.div whileHover={{ y: -3 }} className="relative rounded-[22px] p-5 overflow-hidden"
+              style={{ background: 'linear-gradient(135deg, rgba(16,18,22,0.95), rgba(10,12,16,0.98))', border: '1px solid rgba(148,163,184,0.18)' }}>
+              <div className="absolute -right-4 -top-4 text-7xl opacity-[0.07]">🥈</div>
+              <div className="absolute inset-0 opacity-20" style={{ background: 'radial-gradient(circle at 80% 20%, rgba(148,163,184,0.4), transparent 60%)' }} />
+              <div className="relative z-10">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
+                    style={{ background: 'rgba(148,163,184,0.12)', border: '1px solid rgba(148,163,184,0.25)' }}>🥈</div>
+                  <div>
+                    <p className="text-white font-bold text-sm">999 Silver</p>
+                    <p className="text-xs font-semibold" style={{ color: '#94a3b8' }}>{formatGrams(data?.total_silver_grams)} gm</p>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center mb-2 mt-2">
+                  <p className="text-xs text-white/50">Locked</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs font-semibold text-white/80">{formatGrams(data?.locked_silver || 0)}</p>
+                    <Link to="/lock-in?metal=silver" className="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-400/10 border border-gray-400/20 px-2 py-0.5 rounded-md hover:bg-gray-400/20 transition-colors">
+                      View
+                    </Link>
+                  </div>
+                </div>
+                <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(148,163,184,0.3), transparent)', marginBottom: 12, marginTop: 4 }} />
+                <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>Current Value</p>
+                <p className="text-white font-bold text-xl mb-4">₹{formatINR(data?.silver_current_value)}</p>
+                <div className="flex gap-2">
+                  <Link to="/silver" className="flex-1 py-2 rounded-xl text-xs font-bold text-center"
+                    style={{ background: 'rgba(203,213,225,0.85)', color: '#000' }}>Buy Silver</Link>
+                  <Link to="/sell?metal=silver" className="flex-1 py-2 rounded-xl text-xs font-bold text-center"
+                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)' }}>Sell</Link>
+                </div>
               </div>
-            </div>
-            <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(148,163,184,0.3), transparent)', marginBottom: 12, marginTop: 4 }} />
-            <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>Current Value</p>
-            <p className="text-white font-bold text-xl mb-4">₹{formatINR(data?.silver_current_value)}</p>
-            <div className="flex gap-2">
-              <Link to="/silver" className="flex-1 py-2 rounded-xl text-xs font-bold text-center"
-                style={{ background: 'rgba(203,213,225,0.85)', color: '#000' }}>Buy Silver</Link>
-              <Link to="/sell?metal=silver" className="flex-1 py-2 rounded-xl text-xs font-bold text-center"
-                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)' }}>Sell</Link>
-            </div>
-          </div>
-        </motion.div>
-      </motion.div>
+            </motion.div>
+          </motion.div>
 
         </div>{/* end right col */}
       </div>{/* end main grid */}
+
+      {/* Mandatory Claim Gift Modal */}
+      {pendingGift && (
+        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="card-premium max-w-md w-full p-8 text-center space-y-6 border-[#D4AF37] shadow-2xl relative animate-in zoom-in-95 duration-300">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-[#D4AF37]/30 to-[#D4AF37]/10 flex items-center justify-center text-[#D4AF37] mx-auto border-2 border-[#D4AF37] shadow-[0_0_30px_rgba(212,175,55,0.4)]">
+              <Gift size={36} />
+            </div>
+
+            <div>
+              <div className="inline-block px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-[#D4AF37]/20 text-[#D4AF37] mb-2 border border-[#D4AF37]/30">
+                You've Received a Gift! 🎁
+              </div>
+              <h2 className="text-2xl font-black text-white">Claim Your 24K Gold</h2>
+              <p className="text-white/60 text-xs mt-1">
+                Sent by <span className="text-white font-bold">{pendingGift.sender_name} ({pendingGift.sender_mobile})</span>
+              </p>
+            </div>
+
+            <div className="bg-[#111] p-5 rounded-2xl border border-white/10 space-y-2 text-left">
+              <div className="flex justify-between items-center text-sm border-b border-white/5 pb-2">
+                <span className="text-white/50 text-xs uppercase font-bold">Pure 24K Gold:</span>
+                <span className="text-[#D4AF37] font-black text-base">{formatGrams(pendingGift.gold_grams)}</span>
+              </div>
+              <div className="flex justify-between items-center text-sm border-b border-white/5 pb-2">
+                <span className="text-white/50 text-xs uppercase font-bold">Value:</span>
+                <span className="text-white font-bold">{formatINR(pendingGift.amount_inr)}</span>
+              </div>
+              {pendingGift.message && (
+                <div className="pt-1">
+                  <span className="text-[11px] text-white/40 uppercase font-bold block mb-1">Message:</span>
+                  <p className="text-xs text-white/80 italic bg-white/5 p-2.5 rounded-xl border border-white/5">
+                    "{pendingGift.message}"
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <p className="text-amber-300 text-xs font-semibold">
+              ⚠️ Mandatory: Please claim this gift now to add the pure 24K gold into your vault balance.
+            </p>
+
+            <button
+              onClick={handleClaimPendingGift}
+              disabled={claimingGift}
+              className="w-full bg-gradient-to-r from-[#D4AF37] to-[#AA771C] hover:brightness-110 text-black font-black py-4 rounded-xl text-base flex items-center justify-center gap-2 shadow-xl shadow-[#D4AF37]/25 transition-all cursor-pointer"
+            >
+              {claimingGift ? (
+                <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  <Gift size={20} />
+                  <span>Claim Gold to My Vault</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
 
     </motion.div>
   );

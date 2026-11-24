@@ -1,1 +1,11 @@
 node_modules/
+*.zip
+.zip
+dist/
+.env.local
+.DS_Store
+*.zip
+.zip
+dist/
+.env.local
+.DS_Store
